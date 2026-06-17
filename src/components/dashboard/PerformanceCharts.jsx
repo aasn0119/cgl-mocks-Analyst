@@ -10,18 +10,22 @@ import {
     Bar,
 } from 'recharts';
 
-/* ================= CUSTOM TOOLTIP ================= */
+/* ================= LineChart TOOLTIP ================= */
 
-const CustomTooltip = ({ active, payload, label }) => {
+const LineChartTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
+
+    const data = payload[0].payload;
 
     return (
         <div className="bg-slate-900 text-white px-3 py-2 rounded-xl shadow-xl border border-slate-700">
-            <p className="text-xs text-slate-400 mb-1">{label}</p>
+            <p className="text-xs text-slate-400">Mock #{data.attempt}</p>
+
+            <p className="text-xs text-slate-400 mb-2">{data.date}</p>
 
             {payload.map((p, i) => (
                 <p key={i} className="text-sm font-semibold">
-                    <span className="text-slate-300">{p.name}: </span>
+                    <span className="text-slate-300">{p.name}:</span>{' '}
                     <span className="text-white">{p.value}</span>
                 </p>
             ))}
@@ -32,8 +36,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 /* ================= MAIN COMPONENT ================= */
 
 const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
-    const platformData = buildPlatformData(mocks);
     const subjectTrendData = buildSubjectTrendData(mocks);
+    console.log('Subject Trend Data:', subjectTrendData);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -56,13 +60,27 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                         </defs>
 
                         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <XAxis
+                            dataKey="attempt"
+                            tick={{ fontSize: 11 }}
+                            label={{
+                                value: 'Attempt',
+                                position: 'insideBottom',
+                            }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                        />
+                        <YAxis
+                            domain={[0, 50]}
+                            ticks={[0, 10, 20, 30, 40, 50]}
+                            tick={{ fontSize: 11 }}
+                        />
+                        <Tooltip content={<LineChartTooltip />} />
 
                         <Line
                             type="monotone"
-                            dataKey="quantScore"
+                            dataKey="Quant"
                             stroke="url(#quant)"
                             strokeWidth={3}
                             dot={false}
@@ -89,13 +107,27 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                         </defs>
 
                         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <XAxis
+                            dataKey="attempt"
+                            tick={{ fontSize: 11 }}
+                            label={{
+                                value: 'Attempt',
+                                position: 'insideBottom',
+                            }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                        />
+                        <YAxis
+                            domain={[0, 50]}
+                            ticks={[0, 10, 20, 30, 40, 50]}
+                            tick={{ fontSize: 11 }}
+                        />
+                        <Tooltip content={<LineChartTooltip />} />
 
                         <Line
                             type="monotone"
-                            dataKey="reasoningScore"
+                            dataKey="Reasoning"
                             stroke="url(#reasoning)"
                             strokeWidth={3}
                             dot={false}
@@ -122,13 +154,29 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                         </defs>
 
                         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <XAxis
+                            dataKey="attempt"
+                            tick={{ fontSize: 11 }}
+                            label={{
+                                value: 'Attempt',
+                                position: 'insideBottom',
+                            }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                            interval="preserveStartEnd"
+                            padding={{ left: 10, right: 10 }}
+                        />
+                        <YAxis
+                            domain={[0, 50]}
+                            ticks={[0, 10, 20, 30, 40, 50]}
+                            tick={{ fontSize: 11 }}
+                        />
+                        <Tooltip content={<LineChartTooltip />} />
 
                         <Line
                             type="monotone"
-                            dataKey="englishScore"
+                            dataKey="English"
                             stroke="url(#english)"
                             strokeWidth={3}
                             dot={false}
@@ -149,13 +197,26 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                         </defs>
 
                         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <XAxis
+                            dataKey="attempt"
+                            label={{
+                                value: 'Attempt',
+                                position: 'insideBottom',
+                            }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                        />
+                        <YAxis
+                            domain={[0, 50]}
+                            ticks={[0, 10, 20, 30, 40, 50]}
+                            tick={{ fontSize: 11 }}
+                        />
+                        <Tooltip content={<LineChartTooltip />} />
 
                         <Line
                             type="monotone"
-                            dataKey="gkScore"
+                            dataKey="GK"
                             stroke="url(#gk)"
                             strokeWidth={3}
                             dot={false}
@@ -184,9 +245,17 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                         </defs>
 
                         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <XAxis
+                            dataKey="attempt"
+                            tick={{ fontSize: 11 }}
+                            label={{
+                                value: 'Attempt',
+                                position: 'insideBottom',
+                                offset: -5,
+                            }}
+                        />
                         <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip content={<LineChartTooltip />} />
 
                         <Line
                             type="monotone"
@@ -217,9 +286,17 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                         </defs>
 
                         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <XAxis
+                            dataKey="attempt"
+                            tick={{ fontSize: 11 }}
+                            label={{
+                                value: 'Attempt',
+                                position: 'insideBottom',
+                                offset: -5,
+                            }}
+                        />
                         <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip content={<LineChartTooltip />} />
 
                         <Line
                             type="monotone"
@@ -234,23 +311,6 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
             </ChartCard>
 
             {/* ================= PLATFORM ================= */}
-
-            <ChartCard title="🏢 Platform Comparison">
-                <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={platformData}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="platform" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
-
-                        <Bar
-                            dataKey="average"
-                            fill="#14b8a6"
-                            radius={[6, 6, 0, 0]}
-                        />
-                    </BarChart>
-                </ResponsiveContainer>
-            </ChartCard>
         </div>
     );
 };
@@ -280,35 +340,18 @@ function ChartCard({ title, children }) {
 function buildSubjectTrendData(mocks) {
     return [...mocks]
         .sort((a, b) => new Date(a.date) - new Date(b.date))
-        .map((m) => ({
+        .map((m, index) => ({
+            attempt: index + 1,
             date: m.date,
-            quantScore: m.quantScore || 0,
-            reasoningScore: m.reasoningScore || 0,
-            englishScore: m.englishScore || 0,
-            gkScore: m.gkScore || 0,
+            platform: m.platform,
+
+            Quant: Number(m.quantScore || 0),
+            Reasoning: Number(m.reasoningScore || 0),
+            English: Number(m.englishScore || 0),
+            GK: Number(m.gkScore || 0),
         }));
 }
 
 /* ================= PLATFORM ================= */
-
-function buildPlatformData(mocks) {
-    const grouped = {};
-
-    mocks.forEach((mock) => {
-        const platform = mock.platform || 'Unknown';
-
-        if (!grouped[platform]) {
-            grouped[platform] = { total: 0, count: 0 };
-        }
-
-        grouped[platform].total += Number(mock.totalScore || 0);
-        grouped[platform].count += 1;
-    });
-
-    return Object.entries(grouped).map(([platform, values]) => ({
-        platform,
-        average: Number((values.total / values.count).toFixed(2)),
-    }));
-}
 
 export default PerformanceCharts;

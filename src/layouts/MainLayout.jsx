@@ -21,7 +21,7 @@ const MainLayout = () => {
         { name: 'Dashboard', path: '/', icon: <FaHome /> },
         { name: 'Mocks', path: '/mocks', icon: <FaFileAlt /> },
         { name: 'Analytics', path: '/analytics', icon: <FaChartBar /> },
-        { name: 'Reports', path: '/reports', icon: <FaChartBar /> },
+        { name: 'Compare', path: '/reports', icon: <FaChartBar /> },
         { name: 'Students', path: '/students', icon: <FaUsers /> },
         { name: 'Leaderboard', path: '/leaderboard', icon: <FaTrophy /> },
         { name: 'Profile', path: `/profile/${user?.uid}`, icon: <FaUser /> },

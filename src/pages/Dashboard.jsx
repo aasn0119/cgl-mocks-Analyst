@@ -237,6 +237,7 @@ const Dashboard = () => {
         mocks,
         stats,
         chartData,
+        subjectTrend,
         subjectAverages,
         weeklyReport,
         monthlyReport,
@@ -281,6 +282,7 @@ const Dashboard = () => {
                 chartData={chartData}
                 subjectAverages={subjectAverages}
                 mocks={mocks}
+                subjectTrend={subjectTrend}
             />
 
             {/* RECENT MOCKS */}
@@ -294,7 +296,7 @@ const Dashboard = () => {
             />
 
             {/* RECORDS TABLE */}
-            <RecordsTable mocks={mocks} />
+            {/* <RecordsTable mocks={mocks} /> */}
         </div>
     );
 };

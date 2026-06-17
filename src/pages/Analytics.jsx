@@ -8,7 +8,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Analytics = () => {
     const { user } = useAuth();
-    console.log('Analytics user:', user);
     const [mocks, setMocks] = useState([]);
 
     useEffect(() => {
