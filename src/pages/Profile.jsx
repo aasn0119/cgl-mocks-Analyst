@@ -984,6 +984,7 @@ const Profile = () => {
                                 {[
                                     'Date',
                                     'Platform',
+                        'MockId / Name',
                                     'Score',
                                     'Quant',
                                     'Reasoning',
@@ -1048,6 +1049,25 @@ const Profile = () => {
                                                 }}
                                             >
                                                 {m.platform || '—'}
+                                            </span>
+                                        </td>
+                                        {/* MockId/Name */}
+                                        <td
+                                            style={{
+                                                paddingRight: 12,
+                                            }}
+                                        >
+                                            <span
+                                                style={{
+                                                    background:
+                                                        'rgba(255,255,255,0.07)',
+                                                    borderRadius: 6,
+                                                    padding: '3px 8px',
+                                                    fontSize: 11,
+                                                    color: C.teal,
+                                                }}
+                                            >
+                                                {m.mockId || '—'}
                                             </span>
                                         </td>
                                         <td style={{ paddingRight: 12 }}>
@@ -1122,7 +1142,7 @@ const Profile = () => {
                             {!recentMocks.length && (
                                 <tr>
                                     <td
-                                        colSpan={10}
+                                        colSpan={11}
                                         style={{
                                             padding: '24px 0',
                                             textAlign: 'center',
