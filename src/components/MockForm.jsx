@@ -197,7 +197,7 @@ const MockForm = () => {
 
         try {
             // logic to check if the sum of all subject scores exceeds totalScore
-            subjectTotal =
+            const subjectTotal =
                 (parseFloat(formData.englishScore) || 0) +
                 (parseFloat(formData.reasoningScore) || 0) +
                 (parseFloat(formData.quantScore) || 0) +
