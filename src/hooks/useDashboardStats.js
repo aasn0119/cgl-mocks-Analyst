@@ -57,9 +57,10 @@ export default function useDashboardStats(userId = null) {
             predictedScore: 0,
         };
         if (!mocks.length) return empty;
+        console.log('mocks: ', mocks);
 
         const sorted = [...mocks].sort(
-            (a, b) => new Date(a.date) - new Date(b.date)
+            (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis()
         );
         const n = sorted.length;
 
@@ -74,6 +75,7 @@ export default function useDashboardStats(userId = null) {
         );
         const currentScore = Number(sorted[n - 1]?.totalScore || 0);
         const firstScore = Number(sorted[0]?.totalScore || 0);
+        console.log('firstScore: ', firstScore, 'currentScore: ', currentScore);
 
         const improvementRaw =
             firstScore > 0
@@ -223,15 +225,25 @@ function buildReport(data) {
 
 function calculateStreaks(sorted) {
     if (!sorted.length) return { current: 0, best: 0 };
-    const dates = sorted.map((m) => new Date(m.date).toDateString());
-    let best = 1,
-        current = 1;
-    for (let i = 1; i < dates.length; i++) {
-        const diff = (new Date(dates[i]) - new Date(dates[i - 1])) / 864e5;
+
+    const uniqueDates = [
+        ...new Set(sorted.map((m) => new Date(m.date).toDateString())),
+    ];
+
+    let best = 1;
+    let current = 1;
+
+    for (let i = 1; i < uniqueDates.length; i++) {
+        const diff =
+            (new Date(uniqueDates[i]) - new Date(uniqueDates[i - 1])) / 864e5;
+
         if (diff === 1) {
             current++;
             best = Math.max(best, current);
-        } else current = 1;
+        } else {
+            current = 1;
+        }
     }
+
     return { current, best };
 }

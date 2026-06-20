@@ -144,23 +144,73 @@ const Stat = ({ label, value }) => {
 function getPlatformAnalysis(mocks) {
     const grouped = {};
 
+    if (!mocks?.length) return [];
+
     mocks.forEach((mock) => {
         const platform = mock.platform || 'Unknown';
+        const score = Number(mock.totalScore || 0);
+        const date = new Date(mock.date).getTime();
 
         if (!grouped[platform]) {
-            grouped[platform] = { total: 0, count: 0 };
+            grouped[platform] = {
+                total: 0,
+                count: 0,
+                scores: [],
+            };
         }
 
-        grouped[platform].total += Number(mock.totalScore || 0);
+        grouped[platform].total += score;
         grouped[platform].count += 1;
+
+        grouped[platform].scores.push({
+            score,
+            date,
+        });
     });
 
-    return Object.entries(grouped)
-        .map(([name, value]) => ({
+    const result = Object.entries(grouped).map(([name, data]) => {
+        const { scores, total, count } = data;
+
+        // sort oldest → newest for time weighting
+        scores.sort((a, b) => a.date - b.date);
+
+        const avgScore = total / count;
+        const bestScore = Math.max(...scores.map((s) => s.score));
+
+        // -----------------------------
+        // Weighted recent performance
+        // -----------------------------
+        const decay = 0.15;
+        let weightedSum = 0;
+        let weightTotal = 0;
+
+        scores.forEach((s, index) => {
+            const weight = Math.exp(decay * index); // recent gets higher weight
+            weightedSum += s.score * weight;
+            weightTotal += weight;
+        });
+
+        const weightedAvg = weightTotal ? weightedSum / weightTotal : 0;
+
+        // -----------------------------
+        // Final ranking score
+        // -----------------------------
+        const finalScore =
+            weightedAvg * 0.6 + // recent form (most important)
+            bestScore * 0.3 + // peak performance
+            avgScore * 0.1; // stability
+
+        return {
             name,
-            average: (value.total / value.count).toFixed(2),
-        }))
-        .sort((a, b) => Number(b.average) - Number(a.average));
+            average: avgScore.toFixed(2), // keep UI unchanged
+            _rankScore: finalScore, // internal ranking only
+        };
+    });
+
+    // sort by improved ranking logic
+    return result
+        .sort((a, b) => b._rankScore - a._rankScore)
+        .map(({ _rankScore, ...rest }) => rest);
 }
 
 export default ReportsSection;

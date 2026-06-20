@@ -36,6 +36,16 @@ const C = {
     gray: '#888780',
 };
 
+// function to format date from timestamp
+const getTimestamp = (mock) => {
+    const ts = mock.createdAt;
+
+    if (!ts) return new Date(mock.date).getTime();
+
+    if (typeof ts.toMillis === 'function') return ts.toMillis();
+
+    return ts.seconds * 1000 + (ts.nanoseconds || 0) / 1000000;
+};
 /* ─── reusable tooltip ─── */
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
@@ -292,8 +302,8 @@ const Profile = () => {
     const recentMocks = useMemo(
         () =>
             [...(mocks || [])]
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 8),
+                .sort((a, b) => getTimestamp(b) - getTimestamp(a))
+                .slice(0, 10),
         [mocks]
     );
 
@@ -984,7 +994,7 @@ const Profile = () => {
                                 {[
                                     'Date',
                                     'Platform',
-                        'MockId / Name',
+                                    'MockID / Name',
                                     'Score',
                                     'Quant',
                                     'Reasoning',

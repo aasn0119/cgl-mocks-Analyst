@@ -26,19 +26,26 @@ const platforms = [
 
 const formatPlatform = (p) => (p ? String(p) : '-');
 
-const formatDate = (d) => {
-    if (!d) return '-';
-    // If Firestore stores a Date or Timestamp-like value, JS Date can still handle it.
+const formatDate = (timestamp) => {
+    if (!timestamp) return '-';
+
     try {
-        const date = new Date(d);
-        if (Number.isNaN(date.getTime())) return String(d);
-        return date.toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
+        const date = timestamp?.toDate
+            ? timestamp.toDate()
+            : new Date(
+                  timestamp.seconds * 1000 +
+                      (timestamp.nanoseconds || 0) / 1000000
+              );
+
+        return date.toLocaleString('en-IN', {
             day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
         });
     } catch {
-        return String(d);
+        return '-';
     }
 };
 
@@ -82,6 +89,16 @@ const MockTable = () => {
         }
     };
 
+    const getTimestamp = (mock) => {
+        const ts = mock.createdAt;
+
+        if (!ts) return new Date(mock.date).getTime();
+
+        if (typeof ts.toMillis === 'function') return ts.toMillis();
+
+        return ts.seconds * 1000 + (ts.nanoseconds || 0) / 1000000;
+    };
+
     const filteredMocks = useMemo(() => {
         const searchQ = search.trim().toLowerCase();
 
@@ -94,7 +111,7 @@ const MockTable = () => {
             .filter((m) =>
                 formatPlatform(m.platform).toLowerCase().includes(searchQ)
             )
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
+            .sort((a, b) => getTimestamp(b) - getTimestamp(a));
     }, [mocks, platformFilter, search]);
 
     return (
@@ -185,6 +202,9 @@ const MockTable = () => {
                                     Platform
                                 </th>
                                 <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+                                    MockID / Name
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
                                     Score
                                 </th>
                                 <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
@@ -234,11 +254,16 @@ const MockTable = () => {
                                             className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition"
                                         >
                                             <td className="px-4 py-3 text-slate-700 dark:text-slate-200">
-                                                {formatDate(m.date)}
+                                                {formatDate(m.createdAt)}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700">
                                                     {formatPlatform(m.platform)}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700">
+                                                    {m.mockId ?? '-'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 font-semibold text-slate-800 dark:text-white">
