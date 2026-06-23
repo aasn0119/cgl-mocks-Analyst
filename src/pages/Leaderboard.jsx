@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchUsers, fetchAllMocks } from '../services/leaderboardService';
 import { buildLeaderboard } from '../utils/leaderboardUtils';
+import { Link } from 'react-router-dom';
 
 const Leaderboard = () => {
     const [data, setData] = useState([]);
@@ -100,26 +101,49 @@ const Leaderboard = () => {
 
                                         {/* USER */}
                                         <td className="p-4">
-                                            <div className="flex items-center gap-3">
+                                            <Link
+                                                to={`/profile/${u.uid}`}
+                                                className="
+            flex items-center gap-3
+            rounded-xl
+            p-2
+            -m-2
+            transition-all
+            duration-200
+            hover:bg-slate-100
+            dark:hover:bg-slate-800
+            group
+        "
+                                            >
                                                 <img
                                                     src={u.photoURL}
+                                                    alt={u.name}
                                                     className="
-                            w-10 h-10
-                            rounded-full
-                            border-2 border-indigo-500
-                          "
+                w-10 h-10
+                rounded-full
+                border-2 border-indigo-500
+                transition-transform
+                duration-200
+                group-hover:scale-105
+            "
                                                 />
 
                                                 <div>
-                                                    <p className="font-semibold text-slate-800 dark:text-white">
+                                                    <p
+                                                        className="
+                    font-semibold
+                    text-slate-800
+                    dark:text-white
+                    transition-colors
+                    duration-200
+                    group-hover:text-indigo-600
+                    dark:group-hover:text-indigo-400
+                "
+                                                    >
                                                         {u.name}
                                                     </p>
-
-                                                    <p className="text-xs text-slate-500">
-                                                        Student
-                                                    </p>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         </td>
 
                                         {/* SCORE */}

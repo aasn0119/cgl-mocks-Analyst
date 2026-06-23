@@ -57,7 +57,6 @@ export default function useDashboardStats(userId = null) {
             predictedScore: 0,
         };
         if (!mocks.length) return empty;
-        console.log('mocks: ', mocks);
 
         const sorted = [...mocks].sort(
             (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis()
@@ -75,7 +74,6 @@ export default function useDashboardStats(userId = null) {
         );
         const currentScore = Number(sorted[n - 1]?.totalScore || 0);
         const firstScore = Number(sorted[0]?.totalScore || 0);
-        console.log('firstScore: ', firstScore, 'currentScore: ', currentScore);
 
         const improvementRaw =
             firstScore > 0

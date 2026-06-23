@@ -23,7 +23,6 @@ export default function SubjectComparisonPanel({
 }) {
     // ================= SUBJECT DATA =================
     const getSubjectData = (uid) => {
-        console.log('getSubjectData called with uid:', uid);
         const mocks = getUserMocks(uid);
 
         return mocks.map((m, index) => ({

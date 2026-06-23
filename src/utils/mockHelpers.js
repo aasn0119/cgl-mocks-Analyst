@@ -1,6 +1,4 @@
 export const getUserMocks = (mocks, uid) => {
-    console.log('getUserMocks called with uid:', uid);
-    console.log('Available mocks:', mocks);
     if (!Array.isArray(mocks)) return [];
 
     return mocks

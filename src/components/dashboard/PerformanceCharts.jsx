@@ -37,7 +37,6 @@ const LineChartTooltip = ({ active, payload }) => {
 
 const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
     const subjectTrendData = buildSubjectTrendData(mocks);
-    console.log('Subject Trend Data:', subjectTrendData);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

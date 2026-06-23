@@ -12,6 +12,7 @@ import {
     FaBars,
     FaSignOutAlt,
 } from 'react-icons/fa';
+import { FaCodeCompare } from 'react-icons/fa6';
 
 const MainLayout = () => {
     const { user, logout } = useAuth();
@@ -21,8 +22,8 @@ const MainLayout = () => {
         { name: 'Dashboard', path: '/', icon: <FaHome /> },
         { name: 'Mocks', path: '/mocks', icon: <FaFileAlt /> },
         { name: 'Analytics', path: '/analytics', icon: <FaChartBar /> },
-        { name: 'Compare', path: '/reports', icon: <FaChartBar /> },
-        { name: 'Students', path: '/students', icon: <FaUsers /> },
+        { name: 'Compare', path: '/reports', icon: <FaCodeCompare /> },
+        // { name: 'Students', path: '/students', icon: <FaUsers /> },
         { name: 'Leaderboard', path: '/leaderboard', icon: <FaTrophy /> },
         { name: 'Profile', path: `/profile/${user?.uid}`, icon: <FaUser /> },
     ];
@@ -30,7 +31,7 @@ const MainLayout = () => {
     const sidebarWidth = open ? 'w-64' : 'w-20';
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
             {/* ================= SIDEBAR (FIXED) ================= */}
             <aside
                 className={`
@@ -60,9 +61,9 @@ const MainLayout = () => {
 
                     <button
                         onClick={() => setOpen(!open)}
-                        className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+                        className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition cursor-pointer"
                     >
-                        <FaBars />
+                        <FaBars className="text-white" />
                     </button>
                 </div>
 

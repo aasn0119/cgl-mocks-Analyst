@@ -14,7 +14,7 @@ export const useJsonImport = (userId) => {
 
     // ================= FILE PARSER =================
     const parseFile = (file) => {
-        console.log('📂 File selected:', file.name);
+        // console.log('📂 File selected:', file.name);
 
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -23,7 +23,7 @@ export const useJsonImport = (userId) => {
                 try {
                     const json = JSON.parse(e.target.result);
 
-                    console.log('📥 Parsed JSON:', json);
+                    // console.log('📥 Parsed JSON:', json);
 
                     if (!Array.isArray(json)) {
                         console.error('❌ JSON is not an array');
@@ -31,7 +31,7 @@ export const useJsonImport = (userId) => {
                         return;
                     }
 
-                    console.log(`✅ Valid array with ${json.length} items`);
+                    // console.log(`✅ Valid array with ${json.length} items`);
                     resolve(json);
                 } catch (err) {
                     console.error('❌ JSON parse error:', err);
@@ -89,15 +89,15 @@ export const useJsonImport = (userId) => {
         setLoading(true);
         setError(null);
 
-        console.log('🚀 Starting upload process...');
-        console.log('📊 Total incoming mocks:', mocks.length);
+        // console.log('🚀 Starting upload process...');
+        // console.log('📊 Total incoming mocks:', mocks.length);
 
         try {
             const validMocks = mocks.filter(validateMock);
 
-            console.log(
-                `✅ Valid mocks: ${validMocks.length} / ${mocks.length}`
-            );
+            // console.log(
+            //     `✅ Valid mocks: ${validMocks.length} / ${mocks.length}`
+            // );
 
             if (validMocks.length === 0) {
                 throw new Error('No valid mocks to upload');
@@ -108,17 +108,17 @@ export const useJsonImport = (userId) => {
             validMocks.forEach((mock, index) => {
                 const transformed = transformMock(mock);
 
-                console.log(`➡️ Preparing mock ${index + 1}:`, transformed);
+                // console.log(`➡️ Preparing mock ${index + 1}:`, transformed);
 
                 const ref = doc(collection(db, 'mocks'));
                 batch.set(ref, transformed);
             });
 
-            console.log('📦 Committing batch to Firestore...');
+            // console.log('📦 Committing batch to Firestore...');
 
             await batch.commit();
 
-            console.log('🎉 Upload successful!');
+            // console.log('🎉 Upload successful!');
 
             setLoading(false);
 
