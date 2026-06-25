@@ -1,5 +1,16 @@
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
+
+    const { date, platform } = payload[0].payload;
+
+    // Format "2026-06-25" → "25 Jun 2026"
+    const formattedDate = date
+        ? new Date(date).toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+          })
+        : null;
 
     return (
         <div
@@ -13,9 +24,15 @@ const CustomTooltip = ({ active, payload, label }) => {
                 boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
             }}
         >
-            <p style={{ fontWeight: 600, marginBottom: 6, color: '#aaa' }}>
-                {label}
+            {/* Header: date + platform */}
+            <p style={{ fontWeight: 600, marginBottom: 2, color: '#aaa' }}>
+                {formattedDate}
             </p>
+            {platform && (
+                <p style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>
+                    {platform}
+                </p>
+            )}
 
             {payload.map((p, i) => (
                 <p key={i} style={{ color: p.color, margin: '2px 0' }}>

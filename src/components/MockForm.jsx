@@ -62,6 +62,14 @@ const Section = ({ title, icon, children }) => (
     </div>
 );
 
+// ─── Helper: checks value is an integer or ends in exactly .5 ───
+const isIntOrHalf = (value) => {
+    const num = parseFloat(value);
+    if (isNaN(num)) return false;
+    // Allow integers and x.5 values only
+    return num === Math.floor(num) || (num * 10) % 10 === 5;
+};
+
 const MockForm = () => {
     const { user } = useAuth();
 
@@ -91,16 +99,53 @@ const MockForm = () => {
     const accuracy =
         attempted > 0 ? ((correct / attempted) * 100).toFixed(2) : '0.00';
 
+    // ─── Subject-score step validation (integer or .5 only) ─────
+    const validateSubjectScore = (value, fieldLabel) => {
+        if (value === '') return '';
+        const num = parseFloat(value);
+        if (isNaN(num) || num < 0 || num > 50)
+            return `${fieldLabel} must be between 0 and 50`;
+        if (!isIntOrHalf(value))
+            return `${fieldLabel} must be a whole number or end in .5 (e.g. 35 or 35.5)`;
+        return '';
+    };
+
+    // ─── Reusable subject-sum check ──────────────────────────────
+    // Returns an error string if the four subject scores don't add up to totalScore,
+    // or '' if they match (or if not all values are present yet).
+    const subjectSumError = (data) => {
+        const eng = parseFloat(data.englishScore);
+        const rea = parseFloat(data.reasoningScore);
+        const qnt = parseFloat(data.quantScore);
+        const gk = parseFloat(data.gkScore);
+        const tot = parseFloat(data.totalScore);
+
+        // Only validate when all five fields have values
+        if ([eng, rea, qnt, gk, tot].some(isNaN)) return '';
+
+        const subjectTotal = eng + rea + qnt + gk;
+        // Use a tiny epsilon to avoid floating-point drift
+        if (Math.abs(subjectTotal - tot) > 0.001)
+            return `Subject scores sum to ${subjectTotal} but total score is ${tot}. They must be equal.`;
+        return '';
+    };
+
     // ─── Validation helpers ──────────────────────────────────────
-    const validateField = (name, value) => {
+    const validateField = (name, value, latestData) => {
+        // latestData lets us cross-validate against sibling fields
+        const data = latestData || formData;
         const num = parseFloat(value);
         const int = parseInt(value);
 
         switch (name) {
-            case 'totalScore':
+            case 'totalScore': {
                 if (value !== '' && (isNaN(num) || num < 0 || num > 200))
                     return 'Score must be between 0 and 200';
-                break;
+                if (value !== '' && !isIntOrHalf(value))
+                    return 'Total score must be a whole number or end in .5 (e.g. 145 or 145.5)';
+                // Cross-check subject sum whenever totalScore changes
+                return subjectSumError({ ...data, totalScore: value });
+            }
             case 'rank':
                 if (value !== '' && (isNaN(int) || int < 1))
                     return 'Rank must be a positive integer';
@@ -110,18 +155,31 @@ const MockForm = () => {
                     return 'Percentile must be between 0 and 100';
                 break;
             case 'englishScore':
+                return (
+                    validateSubjectScore(value, 'English score') ||
+                    subjectSumError({ ...data, englishScore: value })
+                );
             case 'reasoningScore':
+                return (
+                    validateSubjectScore(value, 'Reasoning score') ||
+                    subjectSumError({ ...data, reasoningScore: value })
+                );
             case 'quantScore':
+                return (
+                    validateSubjectScore(value, 'Quant score') ||
+                    subjectSumError({ ...data, quantScore: value })
+                );
             case 'gkScore':
-                if (value !== '' && (isNaN(num) || num < 0 || num > 50))
-                    return 'Subject score must be between 0 and 50';
-                break;
+                return (
+                    validateSubjectScore(value, 'GK score') ||
+                    subjectSumError({ ...data, gkScore: value })
+                );
             case 'attemptedQuestions':
                 if (value !== '' && (isNaN(int) || int < 0 || int > 100))
                     return 'Attempted must be between 0 and 100';
                 break;
             case 'correctQuestions': {
-                const att = parseInt(formData.attemptedQuestions) || 0;
+                const att = parseInt(data.attemptedQuestions) || 0;
                 if (value !== '' && (isNaN(int) || int < 0))
                     return 'Correct must be 0 or more';
                 if (value !== '' && int > att)
@@ -152,25 +210,70 @@ const MockForm = () => {
             if (!/^\d+$/.test(value)) return;
         }
 
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const updatedData = { ...formData, [name]: value };
+        setFormData(updatedData);
 
-        const error = validateField(name, value);
-        setErrors((prev) => ({ ...prev, [name]: error }));
+        // Validate the changed field
+        const error = validateField(name, value, updatedData);
+        const newErrors = { ...errors, [name]: error };
+
+        // When attempt-related fields change, re-validate correctQuestions too
+        if (name === 'attemptedQuestions') {
+            newErrors.correctQuestions = validateField(
+                'correctQuestions',
+                formData.correctQuestions,
+                updatedData
+            );
+        }
+
+        // When any subject score or totalScore changes, re-validate all five
+        const scoreGroup = [
+            'englishScore',
+            'reasoningScore',
+            'quantScore',
+            'gkScore',
+            'totalScore',
+        ];
+        if (scoreGroup.includes(name)) {
+            scoreGroup.forEach((field) => {
+                if (field !== name) {
+                    // Only surface the sum error on peers — don't overwrite their own
+                    // format errors (validateField returns '' when value is empty or already invalid)
+                    const peerFormatErr = validateField(
+                        field,
+                        updatedData[field],
+                        updatedData
+                    );
+                    newErrors[field] = peerFormatErr;
+                }
+            });
+        }
+
+        setErrors(newErrors);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validate all fields on submit
+        // Validate every field on submit
         const newErrors = {};
         Object.keys(formData).forEach((name) => {
-            const err = validateField(name, formData[name]);
+            const err = validateField(name, formData[name], formData);
             if (err) newErrors[name] = err;
         });
 
+        // Required-field checks
+        if (!formData.date) newErrors.date = 'Date is required';
+        if (!formData.platform) newErrors.platform = 'Platform is required';
+
         if (Object.values(newErrors).some(Boolean)) {
             setErrors(newErrors);
-            alert('Please fix the errors before submitting.');
+            // Scroll to first error
+            const firstErrorEl = document.querySelector('[data-error="true"]');
+            firstErrorEl?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+            });
             return;
         }
 
@@ -196,24 +299,10 @@ const MockForm = () => {
         };
 
         try {
-            // logic to check if the sum of all subject scores exceeds totalScore
-            const subjectTotal =
-                (parseFloat(formData.englishScore) || 0) +
-                (parseFloat(formData.reasoningScore) || 0) +
-                (parseFloat(formData.quantScore) || 0) +
-                (parseFloat(formData.gkScore) || 0);
-
-            if (subjectTotal > mockData.totalScore) {
-                alert(
-                    `The sum of subject scores (${subjectTotal}) exceeds the total score (${mockData.totalScore}). Please correct this.`
-                );
-                return;
-            }
-
             await addMock(mockData);
             alert('Mock Added Successfully');
             setFormData({
-                date: '',
+                date: new Date().toISOString().split('T')[0], // Reset to today, not ''
                 platform: '',
                 mockId: '',
                 totalScore: '',
@@ -271,7 +360,7 @@ const MockForm = () => {
                         required
                     />
 
-                    {/* Platform — kept as its own block for the select element */}
+                    {/* Platform */}
                     <div className="flex flex-col gap-1.5">
                         <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                             <FaClipboardList className="text-indigo-500" />
@@ -282,14 +371,18 @@ const MockForm = () => {
                             value={formData.platform}
                             onChange={handleChange}
                             required
-                            className="
+                            className={`
                 px-4 py-3 rounded-xl
                 bg-white dark:bg-slate-900
-                border border-slate-200 dark:border-slate-700
+                border ${
+                    errors.platform
+                        ? 'border-rose-400 dark:border-rose-600 focus:ring-rose-400'
+                        : 'border-slate-200 dark:border-slate-700 focus:ring-indigo-500'
+                }
                 text-slate-800 dark:text-white
-                focus:outline-none focus:ring-2 focus:ring-indigo-500
+                focus:outline-none focus:ring-2
                 shadow-sm hover:shadow-md transition
-              "
+              `}
                         >
                             <option value="">Select Platform</option>
                             <option>Testbook</option>
@@ -301,6 +394,11 @@ const MockForm = () => {
                             <option>MathsMania</option>
                             <option>Others</option>
                         </select>
+                        {errors.platform && (
+                            <p className="text-xs text-rose-500 dark:text-rose-400 mt-0.5">
+                                {errors.platform}
+                            </p>
+                        )}
                     </div>
 
                     <Input
@@ -326,12 +424,12 @@ const MockForm = () => {
                         type="number"
                         min="0"
                         max="200"
-                        step="0.25"
+                        step="0.5"
                         inputMode="decimal"
                         value={formData.totalScore}
                         onChange={handleChange}
                         error={errors.totalScore}
-                        placeholder="e.g. 145.50"
+                        placeholder="e.g. 145.5"
                     />
                     <Input
                         label="Rank"
@@ -363,8 +461,12 @@ const MockForm = () => {
                 </div>
             </Section>
 
-            {/* SUBJECTS — each section out of 50 */}
+            {/* SUBJECTS */}
             <Section title="Subject Scores (each out of 50)" icon={<FaBook />}>
+                <p className="text-xs text-slate-500 dark:text-slate-400 -mt-3">
+                    Only whole numbers or .5 values allowed (e.g. 35 or 35.5).
+                    Sum must equal Total Score.
+                </p>
                 <div className="grid md:grid-cols-4 gap-5">
                     <Input
                         label="English"
@@ -373,7 +475,7 @@ const MockForm = () => {
                         type="number"
                         min="0"
                         max="50"
-                        step="0.25"
+                        step="0.5"
                         inputMode="decimal"
                         value={formData.englishScore}
                         onChange={handleChange}
@@ -387,7 +489,7 @@ const MockForm = () => {
                         type="number"
                         min="0"
                         max="50"
-                        step="0.25"
+                        step="0.5"
                         inputMode="decimal"
                         value={formData.reasoningScore}
                         onChange={handleChange}
@@ -401,7 +503,7 @@ const MockForm = () => {
                         type="number"
                         min="0"
                         max="50"
-                        step="0.25"
+                        step="0.5"
                         inputMode="decimal"
                         value={formData.quantScore}
                         onChange={handleChange}
@@ -415,7 +517,7 @@ const MockForm = () => {
                         type="number"
                         min="0"
                         max="50"
-                        step="0.25"
+                        step="0.5"
                         inputMode="decimal"
                         value={formData.gkScore}
                         onChange={handleChange}
@@ -444,11 +546,11 @@ const MockForm = () => {
                     />
                     <Input
                         label="Correct"
-                        icon={<FaCheckCircle />} // ← was FaTimesCircle (wrong icon)
+                        icon={<FaCheckCircle />}
                         name="correctQuestions"
                         type="number"
                         min="0"
-                        max={attempted || 100} // ← dynamically capped
+                        max={attempted || 100}
                         step="1"
                         inputMode="numeric"
                         value={formData.correctQuestions}

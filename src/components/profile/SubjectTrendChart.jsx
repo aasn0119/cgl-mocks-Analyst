@@ -30,7 +30,6 @@ const SubjectTrendChart = ({ subjectTrend }) => {
                     { label: 'Reasoning', color: C.amber },
                 ]}
             >
-                {/* Paste existing subject LineChart block */}
                 <ResponsiveContainer width="100%" height={200}>
                     <LineChart
                         data={subjectTrend}
@@ -49,6 +48,7 @@ const SubjectTrendChart = ({ subjectTrend }) => {
                             tick={{ fontSize: 10, fill: '#666' }}
                             tickLine={false}
                             axisLine={false}
+                            domain={[0, 50]}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Line
@@ -100,6 +100,7 @@ const SubjectTrendChart = ({ subjectTrend }) => {
                             tick={{ fontSize: 10, fill: '#666' }}
                             tickLine={false}
                             axisLine={false}
+                            domain={[0, 50]}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Line
