@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { addMock } from '../services/mockService';
+import { addMock, updateMock } from '../services/mockService';
 
 import {
     FaCalendarAlt,
@@ -66,31 +66,61 @@ const Section = ({ title, icon, children }) => (
 const isIntOrHalf = (value) => {
     const num = parseFloat(value);
     if (isNaN(num)) return false;
-    // Allow integers and x.5 values only
     return num === Math.floor(num) || (num * 10) % 10 === 5;
 };
 
-const MockForm = () => {
+const EMPTY_FORM = {
+    date: new Date().toISOString().split('T')[0],
+    platform: '',
+    mockId: '',
+    totalScore: '',
+    rank: '',
+    percentile: '',
+    englishScore: '',
+    reasoningScore: '',
+    quantScore: '',
+    gkScore: '',
+    attemptedQuestions: '',
+    correctQuestions: '',
+    timeTaken: '',
+    remarks: '',
+};
+
+const MockForm = ({ editingMock = null, onEditDone }) => {
     const { user } = useAuth();
+    const isEditing = Boolean(editingMock);
 
-    const [formData, setFormData] = useState({
-        date: new Date().toISOString().split('T')[0],
-        platform: '',
-        mockId: '',
-        totalScore: '',
-        rank: '',
-        percentile: '',
-        englishScore: '',
-        reasoningScore: '',
-        quantScore: '',
-        gkScore: '',
-        attemptedQuestions: '',
-        correctQuestions: '',
-        timeTaken: '',
-        remarks: '',
-    });
-
+    const [formData, setFormData] = useState(EMPTY_FORM);
     const [errors, setErrors] = useState({});
+
+    // ─── Populate form when editingMock changes ──────────────────
+    useEffect(() => {
+        if (editingMock) {
+            setFormData({
+                date:
+                    editingMock.date || new Date().toISOString().split('T')[0],
+                platform: editingMock.platform || '',
+                mockId: editingMock.mockId || '',
+                totalScore: editingMock.totalScore?.toString() || '',
+                rank: editingMock.rank?.toString() || '',
+                percentile: editingMock.percentile?.toString() || '',
+                englishScore: editingMock.englishScore?.toString() || '',
+                reasoningScore: editingMock.reasoningScore?.toString() || '',
+                quantScore: editingMock.quantScore?.toString() || '',
+                gkScore: editingMock.gkScore?.toString() || '',
+                attemptedQuestions:
+                    editingMock.attemptedQuestions?.toString() || '',
+                correctQuestions:
+                    editingMock.correctQuestions?.toString() || '',
+                timeTaken: editingMock.timeTaken?.toString() || '',
+                remarks: editingMock.remarks || '',
+            });
+            setErrors({});
+        } else {
+            setFormData(EMPTY_FORM);
+            setErrors({});
+        }
+    }, [editingMock]);
 
     // ─── Derived stats ───────────────────────────────────────────
     const attempted = parseInt(formData.attemptedQuestions) || 0;
@@ -99,7 +129,7 @@ const MockForm = () => {
     const accuracy =
         attempted > 0 ? ((correct / attempted) * 100).toFixed(2) : '0.00';
 
-    // ─── Subject-score step validation (integer or .5 only) ─────
+    // ─── Subject-score step validation ──────────────────────────
     const validateSubjectScore = (value, fieldLabel) => {
         if (value === '') return '';
         const num = parseFloat(value);
@@ -110,9 +140,6 @@ const MockForm = () => {
         return '';
     };
 
-    // ─── Reusable subject-sum check ──────────────────────────────
-    // Returns an error string if the four subject scores don't add up to totalScore,
-    // or '' if they match (or if not all values are present yet).
     const subjectSumError = (data) => {
         const eng = parseFloat(data.englishScore);
         const rea = parseFloat(data.reasoningScore);
@@ -120,19 +147,15 @@ const MockForm = () => {
         const gk = parseFloat(data.gkScore);
         const tot = parseFloat(data.totalScore);
 
-        // Only validate when all five fields have values
         if ([eng, rea, qnt, gk, tot].some(isNaN)) return '';
 
         const subjectTotal = eng + rea + qnt + gk;
-        // Use a tiny epsilon to avoid floating-point drift
         if (Math.abs(subjectTotal - tot) > 0.001)
             return `Subject scores sum to ${subjectTotal} but total score is ${tot}. They must be equal.`;
         return '';
     };
 
-    // ─── Validation helpers ──────────────────────────────────────
     const validateField = (name, value, latestData) => {
-        // latestData lets us cross-validate against sibling fields
         const data = latestData || formData;
         const num = parseFloat(value);
         const int = parseInt(value);
@@ -143,7 +166,6 @@ const MockForm = () => {
                     return 'Score must be between 0 and 200';
                 if (value !== '' && !isIntOrHalf(value))
                     return 'Total score must be a whole number or end in .5 (e.g. 145 or 145.5)';
-                // Cross-check subject sum whenever totalScore changes
                 return subjectSumError({ ...data, totalScore: value });
             }
             case 'rank':
@@ -200,7 +222,6 @@ const MockForm = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        // For integer-only fields, strip non-digit characters
         const integerFields = [
             'attemptedQuestions',
             'correctQuestions',
@@ -213,11 +234,9 @@ const MockForm = () => {
         const updatedData = { ...formData, [name]: value };
         setFormData(updatedData);
 
-        // Validate the changed field
         const error = validateField(name, value, updatedData);
         const newErrors = { ...errors, [name]: error };
 
-        // When attempt-related fields change, re-validate correctQuestions too
         if (name === 'attemptedQuestions') {
             newErrors.correctQuestions = validateField(
                 'correctQuestions',
@@ -226,7 +245,6 @@ const MockForm = () => {
             );
         }
 
-        // When any subject score or totalScore changes, re-validate all five
         const scoreGroup = [
             'englishScore',
             'reasoningScore',
@@ -237,14 +255,11 @@ const MockForm = () => {
         if (scoreGroup.includes(name)) {
             scoreGroup.forEach((field) => {
                 if (field !== name) {
-                    // Only surface the sum error on peers — don't overwrite their own
-                    // format errors (validateField returns '' when value is empty or already invalid)
-                    const peerFormatErr = validateField(
+                    newErrors[field] = validateField(
                         field,
                         updatedData[field],
                         updatedData
                     );
-                    newErrors[field] = peerFormatErr;
                 }
             });
         }
@@ -252,23 +267,26 @@ const MockForm = () => {
         setErrors(newErrors);
     };
 
+    const handleCancel = () => {
+        setFormData(EMPTY_FORM);
+        setErrors({});
+        onEditDone?.();
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validate every field on submit
         const newErrors = {};
         Object.keys(formData).forEach((name) => {
             const err = validateField(name, formData[name], formData);
             if (err) newErrors[name] = err;
         });
 
-        // Required-field checks
         if (!formData.date) newErrors.date = 'Date is required';
         if (!formData.platform) newErrors.platform = 'Platform is required';
 
         if (Object.values(newErrors).some(Boolean)) {
             setErrors(newErrors);
-            // Scroll to first error
             const firstErrorEl = document.querySelector('[data-error="true"]');
             firstErrorEl?.scrollIntoView({
                 behavior: 'smooth',
@@ -276,6 +294,14 @@ const MockForm = () => {
             });
             return;
         }
+
+        const attempted_val = parseInt(formData.attemptedQuestions) || 0;
+        const correct_val = parseInt(formData.correctQuestions) || 0;
+        const wrong_val = Math.max(attempted_val - correct_val, 0);
+        const accuracy_val =
+            attempted_val > 0
+                ? Number(((correct_val / attempted_val) * 100).toFixed(2))
+                : 0;
 
         const mockData = {
             date: formData.date,
@@ -288,10 +314,10 @@ const MockForm = () => {
             reasoningScore: parseFloat(formData.reasoningScore) || 0,
             quantScore: parseFloat(formData.quantScore) || 0,
             gkScore: parseFloat(formData.gkScore) || 0,
-            attemptedQuestions: attempted,
-            correctQuestions: correct,
-            wrongQuestions: wrong,
-            accuracy: Number(accuracy),
+            attemptedQuestions: attempted_val,
+            correctQuestions: correct_val,
+            wrongQuestions: wrong_val,
+            accuracy: accuracy_val,
             timeTaken: parseFloat(formData.timeTaken) || 0,
             remarks: formData.remarks,
             userId: user.uid,
@@ -299,28 +325,20 @@ const MockForm = () => {
         };
 
         try {
-            await addMock(mockData);
-            alert('Mock Added Successfully');
-            setFormData({
-                date: new Date().toISOString().split('T')[0], // Reset to today, not ''
-                platform: '',
-                mockId: '',
-                totalScore: '',
-                rank: '',
-                percentile: '',
-                englishScore: '',
-                reasoningScore: '',
-                quantScore: '',
-                gkScore: '',
-                attemptedQuestions: '',
-                correctQuestions: '',
-                timeTaken: '',
-                remarks: '',
-            });
+            if (isEditing) {
+                await updateMock(editingMock.id, mockData);
+                alert('Mock Updated Successfully');
+                onEditDone?.();
+            } else {
+                await addMock(mockData);
+                alert('Mock Added Successfully');
+            }
+
+            setFormData(EMPTY_FORM);
             setErrors({});
         } catch (error) {
             console.error(error);
-            alert('Failed to save mock');
+            alert(isEditing ? 'Failed to update mock' : 'Failed to save mock');
         }
     };
 
@@ -339,10 +357,12 @@ const MockForm = () => {
             {/* HEADER */}
             <div className="space-y-1">
                 <h2 className="text-3xl font-extrabold text-indigo-700 dark:text-indigo-300">
-                    Add Mock Test
+                    {isEditing ? 'Edit Mock Test' : 'Add Mock Test'}
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Track your SSC CGL performance with structured analytics
+                    {isEditing
+                        ? `Editing: ${editingMock.platform || ''} ${editingMock.mockId ? `· ${editingMock.mockId}` : ''}`
+                        : 'Track your SSC CGL performance with structured analytics'}
                 </p>
             </div>
 
@@ -577,13 +597,7 @@ const MockForm = () => {
 
             {/* LIVE STATS */}
             <div className="grid md:grid-cols-2 gap-5">
-                <div
-                    className="
-          p-5 rounded-2xl flex justify-between items-center
-          bg-rose-50 dark:bg-rose-950
-          border border-rose-200 dark:border-rose-900
-        "
-                >
+                <div className="p-5 rounded-2xl flex justify-between items-center bg-rose-50 dark:bg-rose-950 border border-rose-200 dark:border-rose-900">
                     <div className="flex items-center gap-2 font-semibold text-rose-700 dark:text-rose-300">
                         <FaTimesCircle className="text-rose-500" />
                         Wrong Questions
@@ -593,13 +607,7 @@ const MockForm = () => {
                     </span>
                 </div>
 
-                <div
-                    className="
-          p-5 rounded-2xl flex justify-between items-center
-          bg-emerald-50 dark:bg-emerald-950
-          border border-emerald-200 dark:border-emerald-900
-        "
-                >
+                <div className="p-5 rounded-2xl flex justify-between items-center bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-900">
                     <div className="flex items-center gap-2 font-semibold text-emerald-700 dark:text-emerald-300">
                         <FaCheckCircle className="text-emerald-500" />
                         Accuracy
@@ -629,19 +637,39 @@ const MockForm = () => {
                 />
             </Section>
 
-            {/* SUBMIT */}
-            <button
-                type="submit"
-                className="
-          w-full py-3 rounded-xl
-          bg-linear-to-r from-indigo-600 via-blue-600 to-sky-600
-          hover:from-indigo-700 hover:to-sky-700
-          text-white font-bold
-          shadow-lg transition active:scale-[0.98]
-        "
+            {/* SUBMIT / CANCEL */}
+            <div
+                className={`flex gap-3 ${isEditing ? 'flex-col sm:flex-row' : ''}`}
             >
-                Save Mock
-            </button>
+                {isEditing && (
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="
+                            sm:w-auto w-full py-3 px-6 rounded-xl
+                            border border-slate-300 dark:border-slate-700
+                            bg-white dark:bg-slate-900
+                            text-slate-700 dark:text-slate-200
+                            font-semibold hover:bg-slate-50 dark:hover:bg-slate-800
+                            shadow-sm transition active:scale-[0.98]
+                        "
+                    >
+                        Cancel Edit
+                    </button>
+                )}
+                <button
+                    type="submit"
+                    className="
+                        flex-1 py-3 rounded-xl
+                        bg-linear-to-r from-indigo-600 via-blue-600 to-sky-600
+                        hover:from-indigo-700 hover:to-sky-700
+                        text-white font-bold
+                        shadow-lg transition active:scale-[0.98]
+                    "
+                >
+                    {isEditing ? 'Update Mock' : 'Save Mock'}
+                </button>
+            </div>
         </form>
     );
 };

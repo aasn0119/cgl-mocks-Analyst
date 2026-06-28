@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FiSearch, FiTrash2, FiFilter } from 'react-icons/fi';
+import { FiSearch, FiTrash2, FiFilter, FiEdit2 } from 'react-icons/fi';
 
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
@@ -49,7 +49,7 @@ const formatDate = (timestamp) => {
     }
 };
 
-const MockTable = () => {
+const MockTable = ({ onEdit }) => {
     const { user } = useAuth();
 
     const [mocks, setMocks] = useState([]);
@@ -223,7 +223,7 @@ const MockTable = () => {
                             {filteredMocks.length === 0 ? (
                                 <tr>
                                     <td
-                                        colSpan={6}
+                                        colSpan={7}
                                         className="text-center p-10 text-slate-500 dark:text-slate-400"
                                     >
                                         No mocks found.
@@ -282,22 +282,38 @@ const MockTable = () => {
                                                 {m.rank ?? '-'}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleDelete(m.id)
-                                                    }
-                                                    disabled={
-                                                        deletingId === m.id
-                                                    }
-                                                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-rose-200/70 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                                                    aria-label="Delete mock"
-                                                >
-                                                    <FiTrash2 className="text-base" />
-                                                    {deletingId === m.id
-                                                        ? 'Deleting...'
-                                                        : 'Delete'}
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    {/* Edit button */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            onEdit?.(m)
+                                                        }
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-indigo-200/70 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition"
+                                                        aria-label="Edit mock"
+                                                    >
+                                                        <FiEdit2 className="text-base" />
+                                                        Edit
+                                                    </button>
+
+                                                    {/* Delete button */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleDelete(m.id)
+                                                        }
+                                                        disabled={
+                                                            deletingId === m.id
+                                                        }
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-rose-200/70 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                                                        aria-label="Delete mock"
+                                                    >
+                                                        <FiTrash2 className="text-base" />
+                                                        {deletingId === m.id
+                                                            ? 'Deleting...'
+                                                            : 'Delete'}
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     );

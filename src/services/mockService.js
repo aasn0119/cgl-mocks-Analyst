@@ -1,6 +1,13 @@
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-
-import { query, where, onSnapshot } from 'firebase/firestore';
+import {
+    collection,
+    addDoc,
+    serverTimestamp,
+    doc,
+    updateDoc,
+    query,
+    where,
+    onSnapshot,
+} from 'firebase/firestore';
 
 import { db } from './firebase';
 
@@ -24,5 +31,12 @@ export const listenToMocks = (userId, callback) => {
         }));
 
         callback(data);
+    });
+};
+
+export const updateMock = (id, data) => {
+    return updateDoc(doc(db, 'mocks', id), {
+        ...data,
+        updatedAt: serverTimestamp(),
     });
 };
