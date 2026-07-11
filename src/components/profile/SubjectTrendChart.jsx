@@ -26,8 +26,8 @@ const SubjectTrendChart = ({ subjectTrend }) => {
                 title="Subject Performance Trend"
                 icon="📚"
                 legend={[
-                    { label: 'Quant', color: C.purple },
                     { label: 'Reasoning', color: C.amber },
+                    { label: 'Quant', color: C.purple },
                 ]}
             >
                 <ResponsiveContainer width="100%" height={200}>
@@ -53,15 +53,6 @@ const SubjectTrendChart = ({ subjectTrend }) => {
                         <Tooltip content={<CustomTooltip />} />
                         <Line
                             type="monotone"
-                            dataKey="quant"
-                            name="Quant"
-                            stroke={C.purple}
-                            strokeWidth={2}
-                            dot={{ r: 3 }}
-                            activeDot={{ r: 5 }}
-                        />
-                        <Line
-                            type="monotone"
                             dataKey="reasoning"
                             name="Reasoning"
                             stroke={C.amber}
@@ -69,6 +60,15 @@ const SubjectTrendChart = ({ subjectTrend }) => {
                             dot={{ r: 3 }}
                             activeDot={{ r: 5 }}
                             strokeDasharray="5 3"
+                        />
+                        <Line
+                            type="monotone"
+                            dataKey="quant"
+                            name="Quant"
+                            stroke={C.purple}
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                            activeDot={{ r: 5 }}
                         />
                     </LineChart>
                 </ResponsiveContainer>
