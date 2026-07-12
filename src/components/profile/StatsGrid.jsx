@@ -17,7 +17,7 @@ const StatsGrid = ({ stats, TARGET_SCORE }) => {
                 value={stats.totalMocks}
                 sub="attempts recorded"
                 color={C.purple}
-                progress={Math.min(stats.totalMocks * 2, 100)}
+                progress={Math.min((stats.totalMocks / 200) * 100, 100)}
             />
 
             <StatCard
@@ -35,7 +35,7 @@ const StatsGrid = ({ stats, TARGET_SCORE }) => {
                 value={stats.bestScore}
                 sub="personal best"
                 color={C.amber}
-                progress={(stats.bestScore / TARGET_SCORE) * 100}
+                progress={Math.min((stats.bestScore / 200) * 100, 100)}
             />
 
             <StatCard
