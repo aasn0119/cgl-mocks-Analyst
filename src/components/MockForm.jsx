@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { addMock, updateMock } from '../services/mockService';
+import toast from 'react-hot-toast';
 
 import {
     FaCalendarAlt,
@@ -327,18 +328,20 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
         try {
             if (isEditing) {
                 await updateMock(editingMock.id, mockData);
-                alert('Mock Updated Successfully');
+                toast.success('Mock Updated Successfully');
                 onEditDone?.();
             } else {
                 await addMock(mockData);
-                alert('Mock Added Successfully');
+                toast.success('Mock Added Successfully');
             }
 
             setFormData(EMPTY_FORM);
             setErrors({});
         } catch (error) {
             console.error(error);
-            alert(isEditing ? 'Failed to update mock' : 'Failed to save mock');
+            toast.error(
+                isEditing ? 'Failed to update mock' : 'Failed to save mock'
+            );
         }
     };
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import JsonImportButton from './JsonImportButton';
 import JsonPreviewModal from './JsonPreviewModal';
 import { useJsonImport } from '../../hooks/useJsonImport';
+import toast from 'react-hot-toast';
 
 const JsonImportWidget = ({ userId }) => {
     const { parseFile, uploadToFirebase, loading } = useJsonImport(userId);
@@ -19,7 +20,7 @@ const JsonImportWidget = ({ userId }) => {
     const handleUpload = async () => {
         await uploadToFirebase(previewData);
         setPreviewData(null);
-        alert('Upload complete 🚀');
+        toast.success('Upload complete 🚀');
     };
 
     return (

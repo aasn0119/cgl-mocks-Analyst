@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 import Login from './pages/Login';
 
@@ -51,6 +52,16 @@ function App() {
                     <Route path="/profile/:uid" element={<Profile />} />
                 </Route>
             </Routes>
+            <Toaster
+                position="top-center"
+                toastOptions={{
+                    duration: 3000,
+                    style: {
+                        maxWidth: '90vw', // keeps it from overflowing on small screens
+                        fontSize: '0.9rem',
+                    },
+                }}
+            />
         </BrowserRouter>
     );
 }
