@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Login from './pages/Login';
+import AccessRestricted from './pages/AccessRestricted';
 
 import Dashboard from './pages/Dashboard';
 import Mocks from './pages/Mocks';
@@ -18,13 +19,28 @@ import MainLayout from './layouts/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-    const { user } = useAuth();
+    const { user, authStatus } = useAuth();
     return (
         <BrowserRouter>
             <Routes>
                 <Route
                     path="/login"
                     element={user ? <Navigate to="/" replace /> : <Login />}
+                />
+
+                <Route
+                    path="/access-restricted"
+                    element={
+                        !user ? (
+                            <Navigate to="/login" replace />
+                        ) : authStatus === 'unauthorized' ? (
+                            <AccessRestricted />
+                        ) : (
+                            // authorized, or still checking — either way this
+                            // isn't where they belong
+                            <Navigate to="/" replace />
+                        )
+                    }
                 />
 
                 <Route
