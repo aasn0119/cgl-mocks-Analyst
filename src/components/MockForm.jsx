@@ -93,6 +93,7 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
 
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [errors, setErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // ─── Populate form when editingMock changes ──────────────────
     useEffect(() => {
@@ -325,23 +326,31 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
             userName: user.displayName,
         };
 
-        try {
-            if (isEditing) {
-                await updateMock(editingMock.id, mockData);
-                toast.success('Mock Updated Successfully');
-                onEditDone?.();
-            } else {
-                await addMock(mockData);
-                toast.success('Mock Added Successfully');
-            }
+        setIsSubmitting(true);
 
+        const savePromise = isEditing
+            ? updateMock(editingMock.id, mockData)
+            : addMock(mockData);
+
+        toast.promise(savePromise, {
+            loading: isEditing ? 'Updating mock...' : 'Saving mock...',
+            success: isEditing
+                ? 'Mock Updated Successfully'
+                : 'Mock Added Successfully',
+            error: isEditing ? 'Failed to update mock' : 'Failed to save mock',
+        });
+
+        try {
+            await savePromise;
+            if (isEditing) {
+                onEditDone?.();
+            }
             setFormData(EMPTY_FORM);
             setErrors({});
         } catch (error) {
             console.error(error);
-            toast.error(
-                isEditing ? 'Failed to update mock' : 'Failed to save mock'
-            );
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -648,29 +657,43 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
                     <button
                         type="button"
                         onClick={handleCancel}
+                        disabled={isSubmitting}
                         className="
-                            sm:w-auto w-full py-3 px-6 rounded-xl
-                            border border-slate-300 dark:border-slate-700
-                            bg-white dark:bg-slate-900
-                            text-slate-700 dark:text-slate-200
-                            font-semibold hover:bg-slate-50 dark:hover:bg-slate-800
-                            shadow-sm transition active:scale-[0.98]
-                        "
+        sm:w-auto w-full py-3 px-6 rounded-xl
+        border border-slate-300 dark:border-slate-700
+        bg-white dark:bg-slate-900
+        text-slate-700 dark:text-slate-200
+        font-semibold hover:bg-slate-50 dark:hover:bg-slate-800
+        shadow-sm transition active:scale-[0.98]
+        disabled:opacity-60 disabled:cursor-not-allowed
+    "
                     >
                         Cancel Edit
                     </button>
                 )}
                 <button
                     type="submit"
+                    disabled={isSubmitting}
                     className="
-                        flex-1 py-3 rounded-xl
-                        bg-linear-to-r from-indigo-600 via-blue-600 to-sky-600
-                        hover:from-indigo-700 hover:to-sky-700
-                        text-white font-bold
-                        shadow-lg transition active:scale-[0.98]
-                    "
+        flex-1 py-3 rounded-xl
+        bg-linear-to-r from-indigo-600 via-blue-600 to-sky-600
+        hover:from-indigo-700 hover:to-sky-700
+        text-white font-bold
+        shadow-lg transition active:scale-[0.98]
+        disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100
+        flex items-center justify-center gap-2
+    "
                 >
-                    {isEditing ? 'Update Mock' : 'Save Mock'}
+                    {isSubmitting && (
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    )}
+                    {isSubmitting
+                        ? isEditing
+                            ? 'Updating...'
+                            : 'Saving...'
+                        : isEditing
+                          ? 'Update Mock'
+                          : 'Save Mock'}
                 </button>
             </div>
         </form>
