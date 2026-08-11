@@ -4,6 +4,7 @@ import AccuracyTrend from '../charts/AccuracyTrend';
 import ScoreTrend from '../charts/ScoreTrend';
 import SubjectRadar from '../charts/SubjectRadar';
 import PlatformChart from '../charts/PlatformChart';
+import AIInsightsPanel from '../components/analytics/AIInsightsPanel';
 import { useAuth } from '../contexts/AuthContext';
 
 const Analytics = () => {
@@ -126,6 +127,8 @@ const Analytics = () => {
                     <PlatformChart data={sorted} />
                 </div>
             </div>
+
+            <AIInsightsPanel mocks={mocks} />
         </div>
     );
 };
