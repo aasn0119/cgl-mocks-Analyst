@@ -1,30 +1,39 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchUsers, fetchAllMocks } from '../services/leaderboardService';
 import { buildLeaderboard } from '../utils/leaderboardUtils';
+import { useTier } from '../contexts/TierContext';
 import { Link } from 'react-router-dom';
 
 const Leaderboard = () => {
-    const [data, setData] = useState([]);
+    const { tier, pattern } = useTier();
+    const [users, setUsers] = useState([]);
+    const [rawMocks, setRawMocks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const load = async () => {
             setLoading(true);
 
-            const users = await fetchUsers();
-            const mocks = await fetchAllMocks();
+            const [u, m] = await Promise.all([fetchUsers(), fetchAllMocks()]);
 
-            const leaderboard = buildLeaderboard(users, mocks);
-
-            setData(leaderboard);
+            setUsers(u);
+            setRawMocks(m);
             setLoading(false);
         };
 
         load();
     }, []);
 
+    const data = useMemo(
+        () => buildLeaderboard(users, rawMocks, tier),
+        [users, rawMocks, tier]
+    );
+
     const sorted = useMemo(
-        () => [...data].sort((a, b) => b.avgScore - a.avgScore),
+        () =>
+            [...data]
+                .filter((u) => u.totalMocks > 0)
+                .sort((a, b) => b.avgScore - a.avgScore),
         [data]
     );
 
@@ -39,7 +48,12 @@ const Leaderboard = () => {
         <div className="space-y-8 p-6">
             {/* ================= HEADER ================= */}
             <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white p-8 rounded-3xl shadow-2xl">
-                <h1 className="text-3xl font-extrabold">🏆 Leaderboard</h1>
+                <div className="flex items-center gap-3 flex-wrap">
+                    <h1 className="text-3xl font-extrabold">🏆 Leaderboard</h1>
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm">
+                        {pattern.fullName}
+                    </span>
+                </div>
 
                 <p className="text-white/80 mt-2">
                     Compete with SSC aspirants and track top performers

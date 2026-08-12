@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTier } from '../contexts/TierContext';
 
 import {
     FaHome,
@@ -11,11 +12,13 @@ import {
     FaUser,
     FaBars,
     FaSignOutAlt,
+    FaLayerGroup,
 } from 'react-icons/fa';
 import { FaCodeCompare } from 'react-icons/fa6';
 
 const MainLayout = () => {
     const { user, logout } = useAuth();
+    const { tier, toggleTier, pattern } = useTier();
     const [open, setOpen] = useState(true);
 
     const menu = [
@@ -66,6 +69,15 @@ const MainLayout = () => {
                         <FaBars className="text-white" />
                     </button>
                 </div>
+
+                {open && (
+                    <div className="px-4 pt-3">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
+                            <FaLayerGroup size={10} />
+                            {pattern.fullName}
+                        </span>
+                    </div>
+                )}
 
                 {/* MENU */}
                 <nav className="mt-4 flex flex-col gap-1 px-2">
@@ -134,6 +146,31 @@ const MainLayout = () => {
                     </h2>
 
                     <div className="flex items-center gap-3">
+                        {/* TIER SWITCHER */}
+                        <div
+                            role="group"
+                            aria-label="Switch exam tier"
+                            className="flex items-center p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                        >
+                            {['tier1', 'tier2'].map((t) => (
+                                <button
+                                    key={t}
+                                    type="button"
+                                    onClick={() => t !== tier && toggleTier()}
+                                    className={`
+                                        px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200
+                                        ${
+                                            tier === t
+                                                ? 'bg-gradient-to-r from-indigo-600 to-cyan-500 text-white shadow-md'
+                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                                        }
+                                    `}
+                                >
+                                    {t === 'tier1' ? 'Tier 1' : 'Tier 2'}
+                                </button>
+                            ))}
+                        </div>
+
                         <div className="text-right hidden sm:block">
                             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                                 {user?.displayName}

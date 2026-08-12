@@ -53,6 +53,7 @@ const Profile = () => {
         subjectTrend,
         subjectAverages,
         TARGET_SCORE,
+        pattern,
     } = useDashboardStats(uid);
     const [userData, setUserData] = useState(null);
 
@@ -180,10 +181,15 @@ const Profile = () => {
                 stats={stats}
                 readinessColor={readinessColor}
                 formatDate={formatDate}
+                pattern={pattern}
             />
 
             {/* ── STAT CARDS ── */}
-            <StatsGrid stats={stats} TARGET_SCORE={TARGET_SCORE} />
+            <StatsGrid
+                stats={stats}
+                TARGET_SCORE={TARGET_SCORE}
+                pattern={pattern}
+            />
 
             {/* ── GOAL TRACKER ── */}
             <GoalTracker stats={stats} TARGET_SCORE={TARGET_SCORE} />

@@ -12,6 +12,7 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 import { generateAIInsights } from '../../utils/aiInsights';
+import { useTier } from '../../contexts/TierContext';
 
 const STATUS_STYLES = {
     red: {
@@ -49,7 +50,10 @@ const SubjectCard = ({ insight, defaultOpen = false }) => {
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-slate-800 dark:text-white">
+                        <h4
+                            className="font-bold text-slate-800 dark:text-white"
+                            title={insight.label}
+                        >
                             {insight.subject}
                         </h4>
                         <span
@@ -60,7 +64,8 @@ const SubjectCard = ({ insight, defaultOpen = false }) => {
                     </div>
 
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        Avg {insight.avg}/50 · {insight.pctOfMax}% mastery
+                        Avg {insight.avg}/{insight.max} · {insight.pctOfMax}%
+                        mastery
                     </p>
                 </div>
 
@@ -79,7 +84,7 @@ const SubjectCard = ({ insight, defaultOpen = false }) => {
 
             <button
                 onClick={() => setOpen((o) => !o)}
-                className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition cursor-pointer"
+                className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition"
             >
                 {open ? 'Hide' : 'Show'} improvement tips
                 {open ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
@@ -123,7 +128,11 @@ const GeneralInsightRow = ({ insight }) => {
 };
 
 const AIInsightsPanel = ({ mocks }) => {
-    const insights = useMemo(() => generateAIInsights(mocks), [mocks]);
+    const { tier, pattern } = useTier();
+    const insights = useMemo(
+        () => generateAIInsights(mocks, tier),
+        [mocks, tier]
+    );
 
     if (!insights) return null;
 
@@ -146,7 +155,7 @@ const AIInsightsPanel = ({ mocks }) => {
                         AI-Powered Insights
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Based on {meta.totalMocks} mock
+                        {pattern.fullName} · Based on {meta.totalMocks} mock
                         {meta.totalMocks > 1 ? 's' : ''} · avg accuracy{' '}
                         {meta.avgAccuracy}%
                     </p>

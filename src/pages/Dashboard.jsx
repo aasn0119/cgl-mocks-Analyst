@@ -23,6 +23,7 @@ const Dashboard = () => {
         weeklyReport,
         monthlyReport,
         TARGET_SCORE,
+        pattern,
     } = useDashboardStats();
 
     if (loading) {
@@ -64,6 +65,7 @@ const Dashboard = () => {
                 subjectAverages={subjectAverages}
                 mocks={mocks}
                 subjectTrend={subjectTrend}
+                pattern={pattern}
             />
 
             {/* RECENT MOCKS */}

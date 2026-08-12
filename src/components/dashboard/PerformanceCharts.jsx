@@ -35,8 +35,21 @@ const LineChartTooltip = ({ active, payload }) => {
 
 /* ================= MAIN COMPONENT ================= */
 
-const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
+const PerformanceCharts = ({ chartData, subjectAverages, mocks, pattern }) => {
     const subjectTrendData = buildSubjectTrendData(mocks);
+
+    const maxOf = (key) =>
+        pattern?.subjects.find((s) => s.key === key)?.max ?? 50;
+
+    const ticksFor = (max) => {
+        const step = max / 5;
+        return Array.from({ length: 6 }, (_, i) => Math.round(i * step));
+    };
+
+    const quantMax = maxOf('quantScore');
+    const reasoningMax = maxOf('reasoningScore');
+    const englishMax = maxOf('englishScore');
+    const gkMax = maxOf('gkScore');
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -71,8 +84,8 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                             height={60}
                         />
                         <YAxis
-                            domain={[0, 50]}
-                            ticks={[0, 10, 20, 30, 40, 50]}
+                            domain={[0, quantMax]}
+                            ticks={ticksFor(quantMax)}
                             tick={{ fontSize: 11 }}
                         />
                         <Tooltip content={<LineChartTooltip />} />
@@ -118,8 +131,8 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                             height={60}
                         />
                         <YAxis
-                            domain={[0, 50]}
-                            ticks={[0, 10, 20, 30, 40, 50]}
+                            domain={[0, reasoningMax]}
+                            ticks={ticksFor(reasoningMax)}
                             tick={{ fontSize: 11 }}
                         />
                         <Tooltip content={<LineChartTooltip />} />
@@ -167,8 +180,8 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                             padding={{ left: 10, right: 10 }}
                         />
                         <YAxis
-                            domain={[0, 50]}
-                            ticks={[0, 10, 20, 30, 40, 50]}
+                            domain={[0, englishMax]}
+                            ticks={ticksFor(englishMax)}
                             tick={{ fontSize: 11 }}
                         />
                         <Tooltip content={<LineChartTooltip />} />
@@ -207,8 +220,8 @@ const PerformanceCharts = ({ chartData, subjectAverages, mocks }) => {
                             height={60}
                         />
                         <YAxis
-                            domain={[0, 50]}
-                            ticks={[0, 10, 20, 30, 40, 50]}
+                            domain={[0, gkMax]}
+                            ticks={ticksFor(gkMax)}
                             tick={{ fontSize: 11 }}
                         />
                         <Tooltip content={<LineChartTooltip />} />

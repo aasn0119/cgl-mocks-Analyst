@@ -1,3 +1,5 @@
+import { getPattern } from '../config/examPatterns';
+
 // ─────────────────────────────────────────────────────────────
 // AI Insights Engine
 // A deterministic, rule-based analyzer that studies a student's
@@ -5,13 +7,18 @@
 // analysis, and actionable improvement guidance.
 // No external API calls — everything is computed from the data
 // already present in Firestore, so it works instantly and free.
+//
+// Tier-aware: subject max marks (and therefore mastery %, status
+// tiers, and priority scoring) come from the exam pattern config,
+// so the same engine works for Tier 1 (50 marks/subject) and
+// Tier 2 Paper I (90/90/135/75 marks) without duplication.
 // ─────────────────────────────────────────────────────────────
 
-const SUBJECT_META = {
-    English: { key: 'englishScore', max: 50 },
-    Reasoning: { key: 'reasoningScore', max: 50 },
-    Quant: { key: 'quantScore', max: 50 },
-    GK: { key: 'gkScore', max: 50 },
+const SUBJECT_KEY_TO_SHORT_LABEL = {
+    englishScore: 'English',
+    reasoningScore: 'Reasoning',
+    quantScore: 'Quant',
+    gkScore: 'GK',
 };
 
 // Tiered, subject-specific study guidance. Tier is chosen based on
@@ -129,16 +136,34 @@ const statusForPercent = (pct) => {
  * subject-wise AI insights.
  *
  * @param {Array} mocks - array of mock objects for a single student
+ *   (should already be filtered to the tier being analyzed)
+ * @param {string} tier - 'tier1' | 'tier2', determines subject
+ *   labels and max marks used for mastery %, priority, and tips
  * @returns {Object|null} insights payload, or null if not enough data
  */
-export const generateAIInsights = (mocks) => {
+export const generateAIInsights = (mocks, tier = 'tier1') => {
     if (!Array.isArray(mocks) || mocks.length === 0) return null;
+
+    const pattern = getPattern(tier);
+
+    // Build subject meta (key + max marks) straight from the
+    // active exam pattern, keyed by the same short labels the
+    // TIPS knowledge base uses (English / Reasoning / Quant / GK).
+    const subjectMeta = {};
+    pattern.subjects.forEach((s) => {
+        const shortLabel = SUBJECT_KEY_TO_SHORT_LABEL[s.key] || s.shortLabel;
+        subjectMeta[shortLabel] = {
+            key: s.key,
+            max: s.max,
+            fullLabel: s.label,
+        };
+    });
 
     const sorted = [...mocks].sort(
         (a, b) => new Date(a.date) - new Date(b.date)
     );
 
-    const subjectInsights = Object.entries(SUBJECT_META).map(
+    const subjectInsights = Object.entries(subjectMeta).map(
         ([subject, meta]) => {
             const scores = sorted.map((m) => num(m[meta.key]));
             const avg = average(scores);
@@ -159,6 +184,8 @@ export const generateAIInsights = (mocks) => {
 
             return {
                 subject,
+                label: meta.fullLabel,
+                max: meta.max,
                 avg: Number(avg.toFixed(1)),
                 best,
                 worst,

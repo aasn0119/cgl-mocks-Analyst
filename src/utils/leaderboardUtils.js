@@ -1,5 +1,10 @@
-export const buildLeaderboard = (users, mocks) => {
+import { getMockTier } from '../config/examPatterns';
+
+export const buildLeaderboard = (users, mocks, tier) => {
     const map = {};
+    const tieredMocks = tier
+        ? mocks.filter((m) => getMockTier(m) === tier)
+        : mocks;
 
     // INIT USERS
     users.forEach((u) => {
@@ -15,7 +20,7 @@ export const buildLeaderboard = (users, mocks) => {
     });
 
     // AGGREGATE MOCKS
-    mocks.forEach((m) => {
+    tieredMocks.forEach((m) => {
         if (!map[m.userId]) return;
 
         map[m.userId].totalMocks += 1;

@@ -1,6 +1,4 @@
 const SubjectAverages = ({ subjectAverages }) => {
-    const MAX_SCORE = 50;
-
     const colors = [
         'from-blue-500 to-cyan-500',
         'from-purple-500 to-pink-500',
@@ -41,7 +39,7 @@ const SubjectAverages = ({ subjectAverages }) => {
                 </h2>
 
                 <p className="text-slate-500 mt-1">
-                    Out of {MAX_SCORE} marks per subject
+                    Marks per subject vary by section weightage
                 </p>
 
                 {/* INSIGHTS */}
@@ -66,7 +64,8 @@ const SubjectAverages = ({ subjectAverages }) => {
             "
             >
                 {subjectAverages.map((subject, index) => {
-                    const percent = (subject.score / MAX_SCORE) * 100;
+                    const maxScore = subject.max || 50;
+                    const percent = (subject.score / maxScore) * 100;
 
                     return (
                         <div
@@ -89,7 +88,10 @@ const SubjectAverages = ({ subjectAverages }) => {
                                         {icons[subject.subject]}
                                     </span>
 
-                                    <h3 className="font-bold text-slate-800 dark:text-white">
+                                    <h3
+                                        className="font-bold text-slate-800 dark:text-white"
+                                        title={subject.label}
+                                    >
                                         {subject.subject}
                                     </h3>
                                 </div>
@@ -101,7 +103,7 @@ const SubjectAverages = ({ subjectAverages }) => {
                                     dark:bg-indigo-900 dark:text-indigo-200
                                 "
                                 >
-                                    {subject.score}/{MAX_SCORE}
+                                    {subject.score}/{maxScore}
                                 </span>
                             </div>
 
@@ -120,7 +122,7 @@ const SubjectAverages = ({ subjectAverages }) => {
                             <div className="mt-3 text-xs text-slate-400 flex justify-between">
                                 <span>0</span>
                                 <span>
-                                    {subject.score} / {MAX_SCORE}
+                                    {subject.score} / {maxScore}
                                 </span>
                                 <span>{percent.toFixed(0)}%</span>
                             </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTier } from '../contexts/TierContext';
 import { addMock, updateMock } from '../services/mockService';
 import toast from 'react-hot-toast';
 
@@ -89,7 +90,14 @@ const EMPTY_FORM = {
 
 const MockForm = ({ editingMock = null, onEditDone }) => {
     const { user } = useAuth();
+    const { tier, pattern } = useTier();
     const isEditing = Boolean(editingMock);
+
+    const subjectMax = (key) =>
+        pattern.subjects.find((s) => s.key === key)?.max ?? 50;
+    const subjectLabel = (key) =>
+        pattern.subjects.find((s) => s.key === key)?.label ?? key;
+    const totalMax = pattern.totalMax;
 
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [errors, setErrors] = useState({});
@@ -132,11 +140,11 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
         attempted > 0 ? ((correct / attempted) * 100).toFixed(2) : '0.00';
 
     // ─── Subject-score step validation ──────────────────────────
-    const validateSubjectScore = (value, fieldLabel) => {
+    const validateSubjectScore = (value, fieldLabel, max) => {
         if (value === '') return '';
         const num = parseFloat(value);
-        if (isNaN(num) || num < 0 || num > 50)
-            return `${fieldLabel} must be between 0 and 50`;
+        if (isNaN(num) || num < 0 || num > max)
+            return `${fieldLabel} must be between 0 and ${max}`;
         if (!isIntOrHalf(value))
             return `${fieldLabel} must be a whole number or end in .5 (e.g. 35 or 35.5)`;
         return '';
@@ -164,10 +172,10 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
 
         switch (name) {
             case 'totalScore': {
-                if (value !== '' && (isNaN(num) || num < 0 || num > 200))
-                    return 'Score must be between 0 and 200';
+                if (value !== '' && (isNaN(num) || num < 0 || num > totalMax))
+                    return `Score must be between 0 and ${totalMax}`;
                 if (value !== '' && !isIntOrHalf(value))
-                    return 'Total score must be a whole number or end in .5 (e.g. 145 or 145.5)';
+                    return `Total score must be a whole number or end in .5 (e.g. 145 or 145.5)`;
                 return subjectSumError({ ...data, totalScore: value });
             }
             case 'rank':
@@ -180,27 +188,42 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
                 break;
             case 'englishScore':
                 return (
-                    validateSubjectScore(value, 'English score') ||
-                    subjectSumError({ ...data, englishScore: value })
+                    validateSubjectScore(
+                        value,
+                        subjectLabel('englishScore'),
+                        subjectMax('englishScore')
+                    ) || subjectSumError({ ...data, englishScore: value })
                 );
             case 'reasoningScore':
                 return (
-                    validateSubjectScore(value, 'Reasoning score') ||
-                    subjectSumError({ ...data, reasoningScore: value })
+                    validateSubjectScore(
+                        value,
+                        subjectLabel('reasoningScore'),
+                        subjectMax('reasoningScore')
+                    ) || subjectSumError({ ...data, reasoningScore: value })
                 );
             case 'quantScore':
                 return (
-                    validateSubjectScore(value, 'Quant score') ||
-                    subjectSumError({ ...data, quantScore: value })
+                    validateSubjectScore(
+                        value,
+                        subjectLabel('quantScore'),
+                        subjectMax('quantScore')
+                    ) || subjectSumError({ ...data, quantScore: value })
                 );
             case 'gkScore':
                 return (
-                    validateSubjectScore(value, 'GK score') ||
-                    subjectSumError({ ...data, gkScore: value })
+                    validateSubjectScore(
+                        value,
+                        subjectLabel('gkScore'),
+                        subjectMax('gkScore')
+                    ) || subjectSumError({ ...data, gkScore: value })
                 );
             case 'attemptedQuestions':
-                if (value !== '' && (isNaN(int) || int < 0 || int > 100))
-                    return 'Attempted must be between 0 and 100';
+                if (
+                    value !== '' &&
+                    (isNaN(int) || int < 0 || int > pattern.maxQuestions)
+                )
+                    return `Attempted must be between 0 and ${pattern.maxQuestions}`;
                 break;
             case 'correctQuestions': {
                 const att = parseInt(data.attemptedQuestions) || 0;
@@ -211,8 +234,11 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
                 break;
             }
             case 'timeTaken':
-                if (value !== '' && (isNaN(num) || num < 0 || num > 60))
-                    return 'Time must be between 0 and 60 minutes';
+                if (
+                    value !== '' &&
+                    (isNaN(num) || num < 0 || num > pattern.maxTimeMinutes)
+                )
+                    return `Time must be between 0 and ${pattern.maxTimeMinutes} minutes`;
                 break;
             default:
                 break;
@@ -309,6 +335,7 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
             date: formData.date,
             platform: formData.platform,
             mockId: formData.mockId,
+            tier,
             totalScore: parseFloat(formData.totalScore) || 0,
             rank: parseInt(formData.rank) || 0,
             percentile: parseFloat(formData.percentile) || 0,
@@ -368,9 +395,14 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
         >
             {/* HEADER */}
             <div className="space-y-1">
-                <h2 className="text-3xl font-extrabold text-indigo-700 dark:text-indigo-300">
-                    {isEditing ? 'Edit Mock Test' : 'Add Mock Test'}
-                </h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                    <h2 className="text-3xl font-extrabold text-indigo-700 dark:text-indigo-300">
+                        {isEditing ? 'Edit Mock Test' : 'Add Mock Test'}
+                    </h2>
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
+                        {pattern.fullName}
+                    </span>
+                </div>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
                     {isEditing
                         ? `Editing: ${editingMock.platform || ''} ${editingMock.mockId ? `· ${editingMock.mockId}` : ''}`
@@ -450,18 +482,18 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
             <Section title="Performance" icon={<FaTrophy />}>
                 <div className="grid md:grid-cols-3 gap-5">
                     <Input
-                        label="Total Score (0–200)"
+                        label={`Total Score (0–${totalMax})`}
                         icon={<FaTrophy />}
                         name="totalScore"
                         type="number"
                         min="0"
-                        max="200"
+                        max={totalMax}
                         step="0.5"
                         inputMode="decimal"
                         value={formData.totalScore}
                         onChange={handleChange}
                         error={errors.totalScore}
-                        placeholder="e.g. 145.5"
+                        placeholder={`e.g. ${Math.round(totalMax * 0.7)}`}
                     />
                     <Input
                         label="Rank"
@@ -494,67 +526,70 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
             </Section>
 
             {/* SUBJECTS */}
-            <Section title="Subject Scores (each out of 50)" icon={<FaBook />}>
+            <Section
+                title={`Subject Scores — ${pattern.fullName}`}
+                icon={<FaBook />}
+            >
                 <p className="text-xs text-slate-500 dark:text-slate-400 -mt-3">
                     Only whole numbers or .5 values allowed (e.g. 35 or 35.5).
-                    Sum must equal Total Score.
+                    Sum must equal Total Score ({totalMax} max).
                 </p>
                 <div className="grid md:grid-cols-4 gap-5">
                     <Input
-                        label="English"
+                        label={`${subjectLabel('englishScore')} (0–${subjectMax('englishScore')})`}
                         icon={<FaBook />}
                         name="englishScore"
                         type="number"
                         min="0"
-                        max="50"
+                        max={subjectMax('englishScore')}
                         step="0.5"
                         inputMode="decimal"
                         value={formData.englishScore}
                         onChange={handleChange}
                         error={errors.englishScore}
-                        placeholder="0–50"
+                        placeholder={`0–${subjectMax('englishScore')}`}
                     />
                     <Input
-                        label="Reasoning"
+                        label={`${subjectLabel('reasoningScore')} (0–${subjectMax('reasoningScore')})`}
                         icon={<FaBrain />}
                         name="reasoningScore"
                         type="number"
                         min="0"
-                        max="50"
+                        max={subjectMax('reasoningScore')}
                         step="0.5"
                         inputMode="decimal"
                         value={formData.reasoningScore}
                         onChange={handleChange}
                         error={errors.reasoningScore}
-                        placeholder="0–50"
+                        placeholder={`0–${subjectMax('reasoningScore')}`}
                     />
                     <Input
-                        label="Quant"
+                        label={`${subjectLabel('quantScore')} (0–${subjectMax('quantScore')})`}
                         icon={<FaCalculator />}
                         name="quantScore"
                         type="number"
                         min="0"
-                        max="50"
+                        max={subjectMax('quantScore')}
                         step="0.5"
                         inputMode="decimal"
                         value={formData.quantScore}
                         onChange={handleChange}
                         error={errors.quantScore}
-                        placeholder="0–50"
+                        placeholder={`0–${subjectMax('quantScore')}`}
                     />
                     <Input
-                        label="GK"
+                        label={`${subjectLabel('gkScore')} (0–${subjectMax('gkScore')})`}
                         icon={<FaGlobeAsia />}
                         name="gkScore"
                         type="number"
                         min="0"
-                        max="50"
+                        max={subjectMax('gkScore')}
                         step="0.5"
                         inputMode="decimal"
                         value={formData.gkScore}
                         onChange={handleChange}
                         error={errors.gkScore}
-                        placeholder="0–50"
+                        placeholder={`0–${subjectMax('gkScore')}`}
                     />
                 </div>
             </Section>
@@ -563,18 +598,18 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
             <Section title="Attempt Statistics" icon={<FaCheckCircle />}>
                 <div className="grid md:grid-cols-3 gap-5">
                     <Input
-                        label="Attempted (0–100)"
+                        label={`Attempted (0–${pattern.maxQuestions})`}
                         icon={<FaCheckCircle />}
                         name="attemptedQuestions"
                         type="number"
                         min="0"
-                        max="100"
+                        max={pattern.maxQuestions}
                         step="1"
                         inputMode="numeric"
                         value={formData.attemptedQuestions}
                         onChange={handleChange}
                         error={errors.attemptedQuestions}
-                        placeholder="Max 100"
+                        placeholder={`Max ${pattern.maxQuestions}`}
                     />
                     <Input
                         label="Correct"
@@ -582,27 +617,27 @@ const MockForm = ({ editingMock = null, onEditDone }) => {
                         name="correctQuestions"
                         type="number"
                         min="0"
-                        max={attempted || 100}
+                        max={attempted || pattern.maxQuestions}
                         step="1"
                         inputMode="numeric"
                         value={formData.correctQuestions}
                         onChange={handleChange}
                         error={errors.correctQuestions}
-                        placeholder={`Max ${attempted || 100}`}
+                        placeholder={`Max ${attempted || pattern.maxQuestions}`}
                     />
                     <Input
-                        label="Time Taken (minutes)"
+                        label={`Time Taken (minutes, max ${pattern.maxTimeMinutes})`}
                         icon={<FaClock />}
                         name="timeTaken"
                         type="number"
                         min="0"
-                        max="60"
+                        max={pattern.maxTimeMinutes}
                         step="0.5"
                         inputMode="decimal"
                         value={formData.timeTaken}
                         onChange={handleChange}
                         error={errors.timeTaken}
-                        placeholder="0–60"
+                        placeholder={`0–${pattern.maxTimeMinutes}`}
                     />
                 </div>
             </Section>
