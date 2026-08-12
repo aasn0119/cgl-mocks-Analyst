@@ -17,7 +17,7 @@ import { useAuth } from './contexts/AuthContext';
 import MainLayout from './layouts/MainLayout';
 
 import ProtectedRoute from './components/ProtectedRoute';
-import NotFound from './pages/Notfound';
+import NotFound from './pages/NotFound';
 
 function App() {
     const { user, authStatus } = useAuth();
