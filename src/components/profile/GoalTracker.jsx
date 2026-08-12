@@ -125,8 +125,8 @@ const GoalTracker = ({ stats, TARGET_SCORE }) => {
                 }}
             >
                 <span>0</span>
-                <span>80</span>
-                <span>120</span>
+                <span>{Math.round(TARGET_SCORE * 0.5)}</span>
+                <span>{Math.round(TARGET_SCORE * 0.75)}</span>
                 <span style={{ color: achieved ? C.teal : '#666' }}>
                     {TARGET_SCORE} {achieved && '✓'}
                 </span>

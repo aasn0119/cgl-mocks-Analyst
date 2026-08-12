@@ -6,20 +6,25 @@ import SubjectRadar from '../charts/SubjectRadar';
 import PlatformChart from '../charts/PlatformChart';
 import AIInsightsPanel from '../components/analytics/AIInsightsPanel';
 import { useAuth } from '../contexts/AuthContext';
+import { useTier } from '../contexts/TierContext';
+import { getMockTier } from '../config/examPatterns';
 
 const Analytics = () => {
     const { user } = useAuth();
-    const [mocks, setMocks] = useState([]);
+    const { tier, pattern } = useTier();
+    const [allMocks, setAllMocks] = useState([]);
 
     useEffect(() => {
         if (!user) return;
 
         const unsub = listenToMocks(user.uid, (data) => {
-            setMocks(data);
+            setAllMocks(data);
         });
 
         return () => unsub();
     }, [user]);
+
+    const mocks = allMocks.filter((m) => getMockTier(m) === tier);
 
     if (!mocks.length) {
         return (
@@ -31,7 +36,8 @@ const Analytics = () => {
                 </h2>
 
                 <p className="mt-3 text-slate-500">
-                    Add a few mock tests to unlock insights and trends.
+                    Add a few {pattern.fullName} mock tests to unlock insights
+                    and trends.
                 </p>
             </div>
         );
@@ -59,9 +65,14 @@ const Analytics = () => {
     return (
         <div className="p-6 grid gap-6">
             <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 rounded-3xl p-8 shadow-2xl text-white">
-                <h1 className="text-4xl font-extrabold">
-                    Analytics Dashboard 📊
-                </h1>
+                <div className="flex items-center gap-3 flex-wrap">
+                    <h1 className="text-4xl font-extrabold">
+                        Analytics Dashboard 📊
+                    </h1>
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm">
+                        {pattern.fullName}
+                    </span>
+                </div>
 
                 <p className="mt-2 text-indigo-100">
                     Track score trends, accuracy growth and subject performance.

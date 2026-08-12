@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { FiSearch, FiTrash2, FiFilter, FiEdit2 } from 'react-icons/fi';
 
 import { useAuth } from '../contexts/AuthContext';
+import { useTier } from '../contexts/TierContext';
 import { db } from '../services/firebase';
+import { getMockTier } from '../config/examPatterns';
 
 import {
     collection,
@@ -51,6 +53,7 @@ const formatDate = (timestamp) => {
 
 const MockTable = ({ onEdit }) => {
     const { user } = useAuth();
+    const { tier, pattern } = useTier();
 
     const [mocks, setMocks] = useState([]);
     const [search, setSearch] = useState('');
@@ -103,6 +106,7 @@ const MockTable = ({ onEdit }) => {
         const searchQ = search.trim().toLowerCase();
 
         return mocks
+            .filter((m) => getMockTier(m) === tier)
             .filter((m) =>
                 platformFilter === 'all'
                     ? true
@@ -112,7 +116,7 @@ const MockTable = ({ onEdit }) => {
                 formatPlatform(m.platform).toLowerCase().includes(searchQ)
             )
             .sort((a, b) => getTimestamp(b) - getTimestamp(a));
-    }, [mocks, platformFilter, search]);
+    }, [mocks, platformFilter, search, tier]);
 
     return (
         <div className="mt-6">
@@ -180,6 +184,9 @@ const MockTable = ({ onEdit }) => {
 
                     {/* Summary row */}
                     <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                        <span className="inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 px-3 py-1 border border-indigo-200/70 dark:border-indigo-500/20">
+                            {pattern.fullName}
+                        </span>
                         <span className="inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 px-3 py-1 border border-indigo-200/70 dark:border-indigo-500/20">
                             {filteredMocks.length} result
                             {filteredMocks.length === 1 ? '' : 's'}

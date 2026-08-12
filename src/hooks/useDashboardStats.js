@@ -1,21 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTier } from '../contexts/TierContext';
 import { db } from '../services/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-
-const TARGET_SCORE = 160;
+import { getMockTier, getReadiness } from '../config/examPatterns';
 
 export default function useDashboardStats(userId = null) {
     const { user } = useAuth();
+    const { tier, pattern } = useTier();
+    const TARGET_SCORE = pattern.targetScore;
 
     const targetUid = userId || user?.uid;
 
-    const [mocks, setMocks] = useState([]);
+    const [allMocks, setAllMocks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!targetUid) {
-            setMocks([]);
+            setAllMocks([]);
             setLoading(false);
             return;
         }
@@ -26,7 +28,7 @@ export default function useDashboardStats(userId = null) {
         );
 
         const unsub = onSnapshot(q, (snap) => {
-            setMocks(
+            setAllMocks(
                 snap.docs.map((doc) => ({
                     id: doc.id,
                     ...doc.data(),
@@ -38,6 +40,12 @@ export default function useDashboardStats(userId = null) {
 
         return () => unsub();
     }, [targetUid]);
+
+    // Only the mocks belonging to the currently selected tier
+    const mocks = useMemo(
+        () => allMocks.filter((m) => getMockTier(m) === tier),
+        [allMocks, tier]
+    );
 
     /* ── aggregate stats ── */
     const stats = useMemo(() => {
@@ -87,14 +95,7 @@ export default function useDashboardStats(userId = null) {
             100
         );
 
-        const readiness =
-            avgScore >= 160
-                ? 'Exam Ready'
-                : avgScore >= 140
-                  ? 'Competitive'
-                  : avgScore >= 120
-                    ? 'Improving'
-                    : 'Needs Work';
+        const readiness = getReadiness(avgScore, tier).label;
 
         const lastFive = sorted.slice(-5);
         let predictedScore = currentScore;
@@ -123,26 +124,29 @@ export default function useDashboardStats(userId = null) {
             readiness,
             predictedScore: predictedScore.toFixed(1),
         };
-    }, [mocks]);
+    }, [mocks, TARGET_SCORE, tier]);
 
     /* ── per-subject averages (FIXED — each subject uses its own scores) ── */
     const subjectAverages = useMemo(() => {
-        if (!mocks.length) return [];
+        if (!mocks.length)
+            return pattern.subjects.map((s) => ({
+                subject: s.shortLabel,
+                label: s.label,
+                score: '0.0',
+                max: s.max,
+            }));
         const n = mocks.length;
-        const quant =
-            mocks.reduce((s, m) => s + Number(m.quantScore || 0), 0) / n;
-        const reasoning =
-            mocks.reduce((s, m) => s + Number(m.reasoningScore || 0), 0) / n;
-        const english =
-            mocks.reduce((s, m) => s + Number(m.englishScore || 0), 0) / n;
-        const gk = mocks.reduce((s, m) => s + Number(m.gkScore || 0), 0) / n;
-        return [
-            { subject: 'Quant', score: quant.toFixed(1) },
-            { subject: 'Reasoning', score: reasoning.toFixed(1) },
-            { subject: 'English', score: english.toFixed(1) },
-            { subject: 'GK', score: gk.toFixed(1) },
-        ];
-    }, [mocks]);
+        return pattern.subjects.map((s) => {
+            const avg =
+                mocks.reduce((sum, m) => sum + Number(m[s.key] || 0), 0) / n;
+            return {
+                subject: s.shortLabel,
+                label: s.label,
+                score: avg.toFixed(1),
+                max: s.max,
+            };
+        });
+    }, [mocks, pattern]);
 
     /* ── chart data (score / accuracy / percentile over time) ── */
     const chartData = useMemo(
@@ -202,6 +206,8 @@ export default function useDashboardStats(userId = null) {
         weeklyReport,
         monthlyReport,
         TARGET_SCORE,
+        tier,
+        pattern,
     };
 }
 

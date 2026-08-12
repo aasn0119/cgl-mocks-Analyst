@@ -17,6 +17,7 @@ import { useAuth } from './contexts/AuthContext';
 import MainLayout from './layouts/MainLayout';
 
 import ProtectedRoute from './components/ProtectedRoute';
+import NotFound from './pages/NotFound';
 
 function App() {
     const { user, authStatus } = useAuth();
@@ -58,15 +59,13 @@ function App() {
 
                     <Route path="/reports" element={<Reports />} />
 
-                    {/* <Route
-            path="/students"
-            element={<Students />}
-          /> */}
+                    {/* <Route path="/students" element={<Students />} /> */}
 
                     <Route path="/leaderboard" element={<Leaderboard />} />
 
                     <Route path="/profile/:uid" element={<Profile />} />
                 </Route>
+                <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster
                 position="top-center"

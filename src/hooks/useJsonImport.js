@@ -7,7 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
-export const useJsonImport = (userId) => {
+export const useJsonImport = (userId, defaultTier = 'tier1') => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -73,6 +73,7 @@ export const useJsonImport = (userId) => {
             ...mock,
 
             userId,
+            tier: mock.tier === 'tier2' ? 'tier2' : defaultTier,
 
             // ensure numeric safety
             totalScore: Number(mock.totalScore || 0),

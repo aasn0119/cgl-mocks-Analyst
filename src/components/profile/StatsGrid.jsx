@@ -1,7 +1,9 @@
 import StatCard from './StatCard';
 import { C } from './constants';
 
-const StatsGrid = ({ stats, TARGET_SCORE }) => {
+const StatsGrid = ({ stats, TARGET_SCORE, pattern }) => {
+    const totalMax = pattern?.totalMax || 200;
+
     return (
         <div
             style={{
@@ -35,7 +37,7 @@ const StatsGrid = ({ stats, TARGET_SCORE }) => {
                 value={stats.bestScore}
                 sub="personal best"
                 color={C.amber}
-                progress={Math.min((stats.bestScore / 200) * 100, 100)}
+                progress={Math.min((stats.bestScore / totalMax) * 100, 100)}
             />
 
             <StatCard

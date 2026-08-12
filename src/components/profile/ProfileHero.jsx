@@ -4,6 +4,7 @@ const ProfileHero = ({
     stats,
     readinessColor,
     formatDate,
+    pattern,
 }) => {
     return (
         <div
@@ -122,6 +123,15 @@ const ProfileHero = ({
                             bg: 'rgba(127,119,221,0.3)',
                             color: '#AFA9EC',
                         },
+                        ...(pattern
+                            ? [
+                                  {
+                                      label: `📘 ${pattern.label}`,
+                                      bg: 'rgba(56,189,248,0.25)',
+                                      color: '#7DD3FC',
+                                  },
+                              ]
+                            : []),
                     ].map((b, i) => (
                         <span
                             key={i}

@@ -12,7 +12,9 @@
 // export default Reports;
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTier } from '../contexts/TierContext';
 import { db } from '../services/firebase';
+import { getMockTier } from '../config/examPatterns';
 import {
     collection,
     query,
@@ -392,14 +394,15 @@ const ChartCard = ({ title, icon, children, legend }) => (
 ═══════════════════════════════════════════════════════════ */
 export default function Reports() {
     const { user } = useAuth();
+    const { tier, pattern } = useTier();
 
     const [allUsers, setAllUsers] = useState([]);
     const [selectedUid, setSelectedUid] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    const [myMocks, setMyMocks] = useState([]);
-    const [themMocks, setThemMocks] = useState([]);
+    const [myMocksRaw, setMyMocksRaw] = useState([]);
+    const [themMocksRaw, setThemMocksRaw] = useState([]);
     const [themUser, setThemUser] = useState(null);
     const [loadingThem, setLoadingThem] = useState(false);
 
@@ -431,7 +434,7 @@ export default function Reports() {
             where('userId', '==', user.uid)
         );
         const unsub = onSnapshot(q, (snap) => {
-            setMyMocks(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+            setMyMocksRaw(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
         });
         return () => unsub();
     }, [user]);
@@ -439,7 +442,7 @@ export default function Reports() {
     /* fetch THEIR mocks + user doc when selection changes */
     useEffect(() => {
         if (!selectedUid) {
-            setThemMocks([]);
+            setThemMocksRaw([]);
             setThemUser(null);
             return;
         }
@@ -450,7 +453,7 @@ export default function Reports() {
             where('userId', '==', selectedUid)
         );
         const unsub = onSnapshot(q, (snap) => {
-            setThemMocks(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+            setThemMocksRaw(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
             setLoadingThem(false);
         });
 
@@ -462,6 +465,16 @@ export default function Reports() {
 
         return () => unsub();
     }, [selectedUid]);
+
+    /* only compare mocks belonging to the currently selected tier */
+    const myMocks = useMemo(
+        () => myMocksRaw.filter((m) => getMockTier(m) === tier),
+        [myMocksRaw, tier]
+    );
+    const themMocks = useMemo(
+        () => themMocksRaw.filter((m) => getMockTier(m) === tier),
+        [themMocksRaw, tier]
+    );
 
     const myStats = useMemo(() => buildStats(myMocks), [myMocks]);
     const themStats = useMemo(() => buildStats(themMocks), [themMocks]);
@@ -599,9 +612,24 @@ export default function Reports() {
                         fontWeight: 700,
                         color: '#fff',
                         marginBottom: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        flexWrap: 'wrap',
                     }}
                 >
                     ⚔️ Compare Performance
+                    <span
+                        style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: '3px 10px',
+                            borderRadius: 99,
+                            background: 'rgba(255,255,255,0.18)',
+                        }}
+                    >
+                        {pattern.fullName}
+                    </span>
                 </h1>
                 <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>
                     Select a student to compare scores, accuracy, and subject
