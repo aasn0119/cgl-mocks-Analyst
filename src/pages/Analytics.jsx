@@ -24,18 +24,61 @@ const Analytics = () => {
         return () => unsub();
     }, [user]);
 
+    // Keep only mocks belonging to the currently selected tier.
     const mocks = allMocks.filter((m) => getMockTier(m) === tier);
 
     if (!mocks.length) {
         return (
-            <div className="flex flex-col items-center justify-center py-24">
-                <div className="text-7xl mb-6">📈</div>
+            <div
+                className="
+                    min-h-[60vh]
+                    px-4
+                    sm:px-6
+                    py-16
+                    sm:py-24
+                    flex
+                    flex-col
+                    items-center
+                    justify-center
+                    text-center
+                "
+            >
+                <div
+                    className="
+                        text-5xl
+                        sm:text-6xl
+                        md:text-7xl
+                        mb-5
+                        sm:mb-6
+                    "
+                >
+                    📈
+                </div>
 
-                <h2 className="text-2xl font-bold text-slate-700 dark:text-white">
+                <h2
+                    className="
+                        text-xl
+                        sm:text-2xl
+                        font-bold
+                        text-slate-700
+                        dark:text-white
+                    "
+                >
                     No Analytics Available
                 </h2>
 
-                <p className="mt-3 text-slate-500">
+                <p
+                    className="
+                        mt-3
+                        max-w-xl
+                        px-2
+                        text-sm
+                        sm:text-base
+                        leading-relaxed
+                        text-slate-500
+                        dark:text-slate-400
+                    "
+                >
                     Add a few {pattern.fullName} mock tests to unlock insights
                     and trends.
                 </p>
@@ -63,23 +106,112 @@ const Analytics = () => {
     const bestScore = Math.max(...mocks.map((m) => Number(m.totalScore || 0)));
 
     return (
-        <div className="p-6 grid gap-6">
-            <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 rounded-3xl p-8 shadow-2xl text-white">
-                <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-4xl font-extrabold">
+        <div
+            className="
+                w-full
+                min-w-0
+                p-3
+                sm:p-4
+                md:p-6
+                grid
+                gap-4
+                sm:gap-5
+                md:gap-6
+            "
+        >
+            {/* =====================================================
+                HERO
+            ====================================================== */}
+
+            <div
+                className="
+                    bg-gradient-to-r
+                    from-indigo-600
+                    via-blue-600
+                    to-cyan-500
+                    rounded-2xl
+                    sm:rounded-3xl
+                    p-5
+                    sm:p-6
+                    md:p-8
+                    shadow-2xl
+                    text-white
+                    overflow-hidden
+                "
+            >
+                <div
+                    className="
+                        flex
+                        flex-col
+                        sm:flex-row
+                        sm:items-center
+                        gap-3
+                        min-w-0
+                    "
+                >
+                    <h1
+                        className="
+                            min-w-0
+                            text-2xl
+                            sm:text-3xl
+                            md:text-4xl
+                            font-extrabold
+                            leading-tight
+                        "
+                    >
                         Analytics Dashboard 📊
                     </h1>
-                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm">
+
+                    <span
+                        className="
+                            shrink-0
+                            w-fit
+                            max-w-full
+                            text-[10px]
+                            sm:text-xs
+                            font-bold
+                            px-2.5
+                            sm:px-3
+                            py-1
+                            rounded-full
+                            bg-white/20
+                            backdrop-blur-sm
+                            truncate
+                        "
+                        title={pattern.fullName}
+                    >
                         {pattern.fullName}
                     </span>
                 </div>
 
-                <p className="mt-2 text-indigo-100">
+                <p
+                    className="
+                        mt-2
+                        max-w-2xl
+                        text-sm
+                        sm:text-base
+                        text-indigo-100
+                        leading-relaxed
+                    "
+                >
                     Track score trends, accuracy growth and subject performance.
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            {/* =====================================================
+                METRICS
+            ====================================================== */}
+
+            <div
+                className="
+                    grid
+                    grid-cols-2
+                    lg:grid-cols-4
+                    gap-3
+                    sm:gap-4
+                    md:gap-5
+                "
+            >
                 <MetricCard
                     title="Total Mocks"
                     value={totalMocks}
@@ -105,63 +237,166 @@ const Analytics = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 rounded-3xl p-5 shadow-xl">
-                    <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">
-                        Score Trend
-                    </h3>
+            {/* =====================================================
+                AI INSIGHTS
+            ====================================================== */}
 
+            <div className="min-w-0">
+                <AIInsightsPanel mocks={mocks} />
+            </div>
+
+            {/* =====================================================
+                SCORE + ACCURACY
+            ====================================================== */}
+
+            <div
+                className="
+                    grid
+                    grid-cols-1
+                    xl:grid-cols-2
+                    gap-4
+                    sm:gap-5
+                    md:gap-6
+                    min-w-0
+                "
+            >
+                <ChartCard title="Score Trend">
                     <ScoreTrend data={sorted} />
-                </div>
-                <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 rounded-3xl p-5 shadow-xl">
-                    <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">
-                        Accuracy Trend
-                    </h3>
+                </ChartCard>
 
+                <ChartCard title="Accuracy Trend">
                     <AccuracyTrend data={sorted} />
-                </div>
+                </ChartCard>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 rounded-3xl p-5 shadow-xl">
-                    <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">
-                        Subject Radar
-                    </h3>
+            {/* =====================================================
+                SUBJECT + PLATFORM
+            ====================================================== */}
 
+            <div
+                className="
+                    grid
+                    grid-cols-1
+                    xl:grid-cols-2
+                    gap-4
+                    sm:gap-5
+                    md:gap-6
+                    min-w-0
+                "
+            >
+                <ChartCard title="Subject Radar">
                     <SubjectRadar data={latest} />
-                </div>
-                <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 rounded-3xl p-5 shadow-xl">
-                    <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">
-                        Platform Distribution
-                    </h3>
+                </ChartCard>
 
+                <ChartCard title="Platform Distribution">
                     <PlatformChart data={sorted} />
-                </div>
+                </ChartCard>
             </div>
-
-            <AIInsightsPanel mocks={mocks} />
         </div>
     );
 };
 
+/* ================================================================
+   CHART CARD
+================================================================ */
+
+const ChartCard = ({ title, children }) => {
+    return (
+        <div
+            className="
+                w-full
+                min-w-0
+                overflow-hidden
+                bg-white/70
+                dark:bg-slate-900/70
+                backdrop-blur-xl
+                border
+                border-white/20
+                rounded-2xl
+                sm:rounded-3xl
+                p-4
+                sm:p-5
+                shadow-xl
+            "
+        >
+            <h3
+                className="
+                    text-lg
+                    sm:text-xl
+                    font-bold
+                    mb-3
+                    sm:mb-4
+                    bg-gradient-to-r
+                    from-indigo-600
+                    to-cyan-500
+                    bg-clip-text
+                    text-transparent
+                "
+            >
+                {title}
+            </h3>
+
+            {/* Prevent chart libraries from forcing horizontal overflow */}
+            <div
+                className="
+                    w-full
+                    min-w-0
+                    overflow-hidden
+                "
+            >
+                {children}
+            </div>
+        </div>
+    );
+};
+
+/* ================================================================
+   METRIC CARD
+================================================================ */
+
 const MetricCard = ({ title, value, color }) => (
     <div
         className={`
-      bg-gradient-to-r
-      ${color}
-      rounded-3xl
-      p-6
-      text-white
-      shadow-lg
-      hover:scale-[1.03]
-      hover:shadow-2xl
-      transition-all
-      duration-300
-    `}
+            min-w-0
+            bg-gradient-to-r
+            ${color}
+            rounded-2xl
+            sm:rounded-3xl
+            p-4
+            sm:p-5
+            md:p-6
+            text-white
+            shadow-lg
+            hover:shadow-2xl
+            transition-all
+            duration-300
+        `}
     >
-        <p className="text-sm opacity-90">{title}</p>
+        <p
+            className="
+                text-xs
+                sm:text-sm
+                opacity-90
+                truncate
+            "
+            title={title}
+        >
+            {title}
+        </p>
 
-        <h2 className="text-4xl font-bold mt-2">{value}</h2>
+        <h2
+            className="
+                text-2xl
+                sm:text-3xl
+                md:text-4xl
+                font-bold
+                mt-1
+                sm:mt-2
+                truncate
+            "
+        >
+            {value}
+        </h2>
     </div>
 );
 

@@ -1,0 +1,318 @@
+.target-celebration-glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(60px);
+    opacity: 0.18;
+}
+
+.target-glow-one {
+    width: 220px;
+    height: 220px;
+    background: #10b981;
+    top: -100px;
+    left: -80px;
+    animation: targetGlowOne 6s ease-in-out infinite;
+}
+
+.target-glow-two {
+    width: 220px;
+    height: 220px;
+    background: #06b6d4;
+    right: -80px;
+    bottom: -120px;
+    animation: targetGlowTwo 7s ease-in-out infinite;
+}
+
+/* ============================================================
+   PARTICLES
+============================================================ */
+
+.target-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.target-particles span {
+    position: absolute;
+    color: #facc15;
+    opacity: 0;
+    font-size: 14px;
+    animation: targetParticle 3s ease-out infinite;
+}
+
+.target-particles span:nth-child(1) {
+    left: 12%;
+    top: 25%;
+    animation-delay: 0s;
+}
+
+.target-particles span:nth-child(2) {
+    left: 22%;
+    top: 65%;
+    animation-delay: 0.5s;
+}
+
+.target-particles span:nth-child(3) {
+    left: 36%;
+    top: 15%;
+    animation-delay: 1s;
+}
+
+.target-particles span:nth-child(4) {
+    left: 48%;
+    top: 70%;
+    animation-delay: 1.4s;
+}
+
+.target-particles span:nth-child(5) {
+    right: 35%;
+    top: 20%;
+    animation-delay: 0.8s;
+}
+
+.target-particles span:nth-child(6) {
+    right: 20%;
+    top: 55%;
+    animation-delay: 1.7s;
+}
+
+.target-particles span:nth-child(7) {
+    right: 10%;
+    top: 30%;
+    animation-delay: 2s;
+}
+
+.target-particles span:nth-child(8) {
+    left: 55%;
+    top: 10%;
+    animation-delay: 2.3s;
+}
+
+/* ============================================================
+   SUCCESS RINGS
+============================================================ */
+
+.target-success-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+
+    border-radius: 50%;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+
+    animation: targetRing 3.2s ease-out infinite;
+}
+
+.ring-one {
+    width: 100px;
+    height: 100px;
+}
+
+.ring-two {
+    width: 180px;
+    height: 180px;
+    animation-delay: 0.7s;
+}
+
+.ring-three {
+    width: 280px;
+    height: 280px;
+    animation-delay: 1.4s;
+}
+
+/* ============================================================
+   TROPHY
+============================================================ */
+
+.target-trophy {
+    animation:
+        targetTrophyFloat 2.5s ease-in-out infinite,
+        targetTrophyGlow 2.5s ease-in-out infinite;
+}
+
+.target-check-badge {
+    animation: targetBadgePop 0.6s ease-out both;
+}
+
+/* ============================================================
+   STARS
+============================================================ */
+
+.target-star {
+    animation: targetStar 1.8s ease-in-out infinite;
+}
+
+.star-two {
+    animation-delay: 0.6s;
+}
+
+/* ============================================================
+   PROGRESS BAR SHINE
+============================================================ */
+
+.progress-shine {
+    position: absolute;
+    top: 0;
+    left: -70%;
+
+    width: 45%;
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.5),
+        transparent
+    );
+
+    transform: skewX(-20deg);
+
+    animation: progressShine 3s ease-in-out infinite;
+}
+
+/* ============================================================
+   ANIMATIONS
+============================================================ */
+
+@keyframes targetGlowOne {
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(70px, 35px);
+    }
+}
+
+@keyframes targetGlowTwo {
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(-50px, -45px);
+    }
+}
+
+@keyframes targetParticle {
+    0% {
+        opacity: 0;
+        transform: translateY(15px) scale(0.5) rotate(0deg);
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    70% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-55px) scale(1.25) rotate(90deg);
+    }
+}
+
+@keyframes targetRing {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.65);
+    }
+
+    25% {
+        opacity: 0.55;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.35);
+    }
+}
+
+@keyframes targetTrophyFloat {
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-6px) rotate(2deg);
+    }
+}
+
+@keyframes targetTrophyGlow {
+    0%,
+    100% {
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
+    }
+
+    50% {
+        box-shadow: 0 8px 40px rgba(16, 185, 129, 0.5);
+    }
+}
+
+@keyframes targetBadgePop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    70% {
+        transform: scale(1.08);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes targetStar {
+    0%,
+    100% {
+        transform: scale(0.85) rotate(0deg);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: scale(1.25) rotate(25deg);
+        opacity: 1;
+    }
+}
+
+@keyframes progressShine {
+    0%,
+    55% {
+        left: -70%;
+    }
+
+    75%,
+    100% {
+        left: 130%;
+    }
+}
+
+/* ============================================================
+   REDUCED MOTION
+============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .target-celebration-glow,
+    .target-particles span,
+    .target-success-ring,
+    .target-trophy,
+    .target-check-badge,
+    .target-star,
+    .progress-shine {
+        animation: none !important;
+    }
+}
