@@ -10,6 +10,7 @@ import Analytics from './pages/Analytics';
 import Reports from './pages/Reports';
 import Students from './pages/Students';
 import Leaderboard from './pages/Leaderboard';
+import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -17,7 +18,6 @@ import { useAuth } from './contexts/AuthContext';
 import MainLayout from './layouts/MainLayout';
 
 import ProtectedRoute from './components/ProtectedRoute';
-import NotFound from './pages/NotFound';
 
 function App() {
     const { user, authStatus } = useAuth();
@@ -59,13 +59,17 @@ function App() {
 
                     <Route path="/reports" element={<Reports />} />
 
-                    {/* <Route path="/students" element={<Students />} /> */}
+                    {/* <Route
+            path="/students"
+            element={<Students />}
+          /> */}
 
                     <Route path="/leaderboard" element={<Leaderboard />} />
 
+                    <Route path="/chat" element={<Chat />} />
+
                     <Route path="/profile/:uid" element={<Profile />} />
                 </Route>
-                <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster
                 position="top-center"

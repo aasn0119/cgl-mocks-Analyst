@@ -8,6 +8,7 @@ import PerformanceCharts from '../components/dashboard/PerformanceCharts';
 import RecentMocks from '../components/dashboard/RecentMocks';
 import ReportsSection from '../components/dashboard/ReportsSection';
 import RecordsTable from '../components/dashboard/RecordsTable';
+import ExamCountdownStreak from '../components/dashboard/ExamCountdownStreak';
 import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
@@ -23,6 +24,7 @@ const Dashboard = () => {
         weeklyReport,
         monthlyReport,
         TARGET_SCORE,
+        tier,
         pattern,
     } = useDashboardStats();
 
@@ -42,6 +44,14 @@ const Dashboard = () => {
                 totalMocks={stats.totalMocks}
                 readiness={stats.readiness}
                 userId={user?.uid || ''}
+            />
+
+            {/* EXAM COUNTDOWN + STREAK */}
+            <ExamCountdownStreak
+                key={tier}
+                mocks={mocks}
+                tier={tier}
+                pattern={pattern}
             />
 
             {/* TARGET TRACKER */}
