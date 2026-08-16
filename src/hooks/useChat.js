@@ -7,6 +7,7 @@ import {
     listenToMyChats,
     sendChatRequest,
     respondToRequest,
+    removeFriend as removeFriendService,
     getChatId,
 } from '../services/ChatService';
 import toast from 'react-hot-toast';
@@ -107,6 +108,17 @@ export default function useChat() {
         }
     };
 
+    const removeFriend = async (chatId) => {
+        try {
+            await removeFriendService(chatId);
+            if (selectedChatId === chatId) setSelectedChatId(null);
+            toast.success('Removed from your chats.');
+        } catch (err) {
+            console.error(err);
+            toast.error('Could not remove this chat. Try again.');
+        }
+    };
+
     const selectedChat = useMemo(
         () => chats.find((c) => c.id === selectedChatId) || null,
         [chats, selectedChatId]
@@ -126,5 +138,6 @@ export default function useChat() {
         sendRequest,
         acceptRequest,
         declineRequest,
+        removeFriend,
     };
 }

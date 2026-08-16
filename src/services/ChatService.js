@@ -4,6 +4,8 @@ import {
     setDoc,
     addDoc,
     updateDoc,
+    deleteDoc,
+    getDocs,
     query,
     where,
     orderBy,
@@ -149,4 +151,17 @@ export const sendMessage = async (chatId, senderId, text) => {
         lastMessage: trimmed,
         lastMessageAt: serverTimestamp(),
     });
+};
+
+// ── Remove a friend ─────────────────────────────────────────
+// Deletes the whole thread: every message, then the chat doc
+// itself. Either participant can do this (e.g. WhatsApp-style
+// "remove contact"). The two users can send a fresh request to
+// reconnect later — a new chat doc will be created on accept.
+export const removeFriend = async (chatId) => {
+    const messagesRef = collection(db, 'chats', chatId, 'messages');
+    const snap = await getDocs(messagesRef);
+
+    await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+    await deleteDoc(doc(db, 'chats', chatId));
 };
