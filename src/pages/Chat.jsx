@@ -18,6 +18,7 @@ const Chat = () => {
         sendRequest,
         acceptRequest,
         declineRequest,
+        removeFriend,
     } = useChat();
 
     return (
@@ -86,7 +87,12 @@ const Chat = () => {
                 </div>
 
                 <div className="hidden md:flex h-full overflow-hidden">
-                    <ChatWindow chat={selectedChat} currentUser={currentUser} />
+                    <ChatWindow
+                        key={selectedChat?.id || 'empty'}
+                        chat={selectedChat}
+                        currentUser={currentUser}
+                        onRemoveFriend={removeFriend}
+                    />
                 </div>
 
                 {/* Mobile: show chat window only once a chat is selected */}
@@ -102,8 +108,10 @@ const Chat = () => {
                         </div>
                         <div className="h-[calc(100%-52px)]">
                             <ChatWindow
+                                key={selectedChat.id}
                                 chat={selectedChat}
                                 currentUser={currentUser}
+                                onRemoveFriend={removeFriend}
                             />
                         </div>
                     </div>

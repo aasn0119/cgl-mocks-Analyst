@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPaperPlane, FaComments } from 'react-icons/fa';
+import {
+    FaPaperPlane,
+    FaComments,
+    FaEllipsisV,
+    FaUserSlash,
+    FaExclamationTriangle,
+} from 'react-icons/fa';
 import { Avatar } from './ChatSidebar';
 import useMessages from '../../hooks/useMessages';
 
@@ -30,9 +36,11 @@ const formatDayLabel = (ts) => {
     });
 };
 
-const ChatWindow = ({ chat, currentUser }) => {
+const ChatWindow = ({ chat, currentUser, onRemoveFriend }) => {
     const { messages, send } = useMessages(chat?.id);
     const [text, setText] = useState('');
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const bottomRef = useRef(null);
 
     // Precompute which messages need a "Today / Yesterday / ..."
@@ -98,17 +106,117 @@ const ChatWindow = ({ chat, currentUser }) => {
     return (
         <div className="flex-1 flex flex-col h-full">
             {/* HEADER */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-200/70 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
+            <div className="relative flex items-center gap-3 px-5 py-3.5 border-b border-slate-200/70 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
                 <Avatar src={otherInfo?.photo} name={otherInfo?.name} online />
-                <div>
-                    <p className="font-bold text-slate-800 dark:text-white">
+                <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-800 dark:text-white truncate">
                         {otherInfo?.name || 'Student'}
                     </p>
                     <p className="text-xs text-emerald-500 font-medium">
                         Connected
                     </p>
                 </div>
+
+                <div className="relative">
+                    <button
+                        onClick={() => setMenuOpen((o) => !o)}
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                        title="Chat options"
+                    >
+                        <FaEllipsisV size={14} />
+                    </button>
+
+                    <AnimatePresence>
+                        {menuOpen && (
+                            <>
+                                {/* click-away layer */}
+                                <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setMenuOpen(false)}
+                                />
+                                <motion.div
+                                    initial={{
+                                        opacity: 0,
+                                        y: -6,
+                                        scale: 0.95,
+                                    }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                                    transition={{ duration: 0.12 }}
+                                    className="absolute right-0 top-11 z-20 w-52 rounded-2xl bg-white dark:bg-slate-800 shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden"
+                                >
+                                    <button
+                                        onClick={() => {
+                                            setMenuOpen(false);
+                                            setConfirmOpen(true);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition"
+                                    >
+                                        <FaUserSlash />
+                                        Remove Friend
+                                    </button>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
+
+            {/* REMOVE FRIEND CONFIRMATION */}
+            <AnimatePresence>
+                {confirmOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm px-4"
+                        onClick={() => setConfirmOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 12 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 12 }}
+                            transition={{
+                                type: 'spring',
+                                stiffness: 300,
+                                damping: 25,
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl mb-4">
+                                <FaExclamationTriangle />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                Remove {otherInfo?.name || 'this student'}?
+                            </h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                                This will permanently delete your entire
+                                conversation with {otherInfo?.name || 'them'}.
+                                You'll need to send a new request to chat again.
+                            </p>
+                            <div className="flex items-center gap-3 mt-6">
+                                <button
+                                    onClick={() => setConfirmOpen(false)}
+                                    className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                                >
+                                    Cancel
+                                </button>
+                                <motion.button
+                                    whileTap={{ scale: 0.96 }}
+                                    onClick={() => {
+                                        setConfirmOpen(false);
+                                        onRemoveFriend?.(chat.id);
+                                    }}
+                                    className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-rose-500 to-red-500 hover:shadow-lg transition-shadow"
+                                >
+                                    Remove
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* MESSAGES */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-1">
