@@ -12,7 +12,7 @@ import {
     markRequestsSeen as markRequestsSeenService,
     markChatRead as markChatReadService,
     getChatId,
-} from '../services/chatService';
+} from '../services/ChatService';
 import toast from 'react-hot-toast';
 
 // Tracks which other users this browser has already "seen" in the
