@@ -14,7 +14,7 @@ import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-
+import NotFound from './pages/NotFound';
 import MainLayout from './layouts/MainLayout';
 
 import ProtectedRoute from './components/ProtectedRoute';
@@ -70,6 +70,7 @@ function App() {
 
                     <Route path="/profile/:uid" element={<Profile />} />
                 </Route>
+                <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster
                 position="top-center"
