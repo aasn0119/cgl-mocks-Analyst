@@ -11,12 +11,16 @@ import { ThemeProvider } from './contexts/ThemeContext';
 
 import { TierProvider } from './contexts/TierContext';
 
+import { ChatProvider } from './contexts/ChatContext';
+
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
         <AuthProvider>
             <ThemeProvider>
                 <TierProvider>
-                    <App />
+                    <ChatProvider>
+                        <App />
+                    </ChatProvider>
                 </TierProvider>
             </ThemeProvider>
         </AuthProvider>

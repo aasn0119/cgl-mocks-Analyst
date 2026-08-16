@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { FaComments } from 'react-icons/fa';
-import useChat from '../hooks/useChat';
+import { useChatContext } from '../contexts/ChatContext';
 import ChatSidebar from '../components/chat/ChatSidebar';
 import ChatWindow from '../components/chat/ChatWindow';
 
@@ -10,16 +10,26 @@ const Chat = () => {
         otherUsers,
         usersLoading,
         incoming,
+        outgoingPending,
         chats,
         relationshipMap,
+        newUsers,
         selectedChat,
         selectedChatId,
         setSelectedChatId,
+        openChat,
+        markChatRead,
         sendRequest,
         acceptRequest,
         declineRequest,
+        retractRequest,
         removeFriend,
-    } = useChat();
+        unseenRequestCount,
+        totalUnreadMessages,
+        newUsersCount,
+        markRequestsSeen,
+        markUsersSeen,
+    } = useChatContext();
 
     return (
         <div className="space-y-6">
@@ -75,14 +85,22 @@ const Chat = () => {
                         chats={chats}
                         currentUser={currentUser}
                         incoming={incoming}
+                        outgoingPending={outgoingPending}
                         otherUsers={otherUsers}
                         usersLoading={usersLoading}
                         relationshipMap={relationshipMap}
+                        newUsers={newUsers}
                         selectedChatId={selectedChatId}
-                        onSelectChat={setSelectedChatId}
+                        onSelectChat={openChat}
                         onSendRequest={sendRequest}
                         onAccept={acceptRequest}
                         onDecline={declineRequest}
+                        onRetractRequest={retractRequest}
+                        unseenRequestCount={unseenRequestCount}
+                        totalUnreadMessages={totalUnreadMessages}
+                        newUsersCount={newUsersCount}
+                        onOpenRequestsTab={markRequestsSeen}
+                        onOpenPeopleTab={markUsersSeen}
                     />
                 </div>
 
@@ -92,6 +110,7 @@ const Chat = () => {
                         chat={selectedChat}
                         currentUser={currentUser}
                         onRemoveFriend={removeFriend}
+                        onMarkRead={markChatRead}
                     />
                 </div>
 
@@ -112,6 +131,7 @@ const Chat = () => {
                                 chat={selectedChat}
                                 currentUser={currentUser}
                                 onRemoveFriend={removeFriend}
+                                onMarkRead={markChatRead}
                             />
                         </div>
                     </div>

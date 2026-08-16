@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { listenToMessages, sendMessage } from '../services/ChatService';
+import { listenToMessages, sendMessage } from '../services/chatService';
 
 export default function useMessages(chatId) {
     const [messages, setMessages] = useState([]);
@@ -14,9 +14,9 @@ export default function useMessages(chatId) {
         return () => unsub();
     }, [chatId]);
 
-    const send = async (senderId, text) => {
+    const send = async (senderId, text, recipientUid) => {
         if (!chatId) return;
-        await sendMessage(chatId, senderId, text);
+        await sendMessage(chatId, senderId, text, recipientUid);
     };
 
     return { messages: chatId ? messages : [], loading, send };

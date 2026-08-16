@@ -8,7 +8,9 @@ import {
     FaCheck,
     FaTimes,
     FaPaperPlane,
+    FaBan,
 } from 'react-icons/fa';
+import { FaWandMagicSparkles } from 'react-icons/fa6';
 
 const Avatar = ({ src, name, size = 'w-11 h-11', online }) => {
     const initials = (name || '?')
@@ -40,27 +42,64 @@ const Avatar = ({ src, name, size = 'w-11 h-11', online }) => {
     );
 };
 
-const TABS = [
-    { id: 'chats', label: 'Chats', icon: FaComments },
-    { id: 'requests', label: 'Requests', icon: FaUserClock },
-    { id: 'people', label: 'Find People', icon: FaUserPlus },
-];
+const TabBadge = ({ count }) => {
+    if (!count) return null;
+    return (
+        <span className="absolute -top-2 -right-3 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
+            {count > 9 ? '9+' : count}
+        </span>
+    );
+};
 
 const ChatSidebar = ({
     chats,
     currentUser,
     incoming,
+    outgoingPending = [],
     otherUsers,
     usersLoading,
     relationshipMap,
+    newUsers = [],
     selectedChatId,
     onSelectChat,
     onSendRequest,
     onAccept,
     onDecline,
+    onRetractRequest,
+    unseenRequestCount = 0,
+    totalUnreadMessages = 0,
+    newUsersCount = 0,
+    onOpenRequestsTab,
+    onOpenPeopleTab,
 }) => {
     const [tab, setTab] = useState('chats');
     const [search, setSearch] = useState('');
+
+    const TABS = [
+        {
+            id: 'chats',
+            label: 'Chats',
+            icon: FaComments,
+            badge: totalUnreadMessages,
+        },
+        {
+            id: 'requests',
+            label: 'Requests',
+            icon: FaUserClock,
+            badge: unseenRequestCount,
+        },
+        {
+            id: 'people',
+            label: 'Find People',
+            icon: FaUserPlus,
+            badge: newUsersCount,
+        },
+    ];
+
+    const newUserIds = useMemo(
+        () => new Set(newUsers.map((u) => u.uid)),
+        [newUsers]
+    );
 
     const filteredPeople = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -72,6 +111,12 @@ const ChatSidebar = ({
     const otherOf = (chat) =>
         chat.participants.find((p) => p !== currentUser?.uid);
 
+    const handleTabChange = (id) => {
+        setTab(id);
+        if (id === 'requests') onOpenRequestsTab?.();
+        if (id === 'people') onOpenPeopleTab?.();
+    };
+
     return (
         <div className="flex flex-col h-full">
             {/* TABS */}
@@ -82,7 +127,7 @@ const ChatSidebar = ({
                     return (
                         <button
                             key={t.id}
-                            onClick={() => setTab(t.id)}
+                            onClick={() => handleTabChange(t.id)}
                             className="relative flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-semibold transition-colors"
                         >
                             {isActive && (
@@ -104,11 +149,7 @@ const ChatSidebar = ({
                                 }`}
                             >
                                 <Icon />
-                                {t.id === 'requests' && incoming.length > 0 && (
-                                    <span className="absolute -top-2 -right-3 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] flex items-center justify-center animate-pulse">
-                                        {incoming.length}
-                                    </span>
-                                )}
+                                <TabBadge count={t.badge} />
                             </span>
                             <span
                                 className={`relative z-10 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}
@@ -143,6 +184,10 @@ const ChatSidebar = ({
                                     const info = chat.participantInfo?.[uid];
                                     const isSelected =
                                         chat.id === selectedChatId;
+                                    const unread =
+                                        chat.unreadCount?.[currentUser?.uid] ||
+                                        0;
+
                                     return (
                                         <motion.button
                                             key={chat.id}
@@ -153,7 +198,9 @@ const ChatSidebar = ({
                                             className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                                                 isSelected
                                                     ? 'bg-indigo-50 dark:bg-indigo-500/10'
-                                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                                    : unread > 0
+                                                      ? 'bg-indigo-50/60 dark:bg-indigo-500/[0.06] hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
+                                                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                             }`}
                                         >
                                             <Avatar
@@ -161,14 +208,33 @@ const ChatSidebar = ({
                                                 name={info?.name}
                                             />
                                             <div className="min-w-0 flex-1">
-                                                <p className="font-semibold text-sm text-slate-800 dark:text-white truncate">
+                                                <p
+                                                    className={`text-sm truncate ${
+                                                        unread > 0
+                                                            ? 'font-bold text-slate-900 dark:text-white'
+                                                            : 'font-semibold text-slate-800 dark:text-white'
+                                                    }`}
+                                                >
                                                     {info?.name || 'Student'}
                                                 </p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                                <p
+                                                    className={`text-xs truncate ${
+                                                        unread > 0
+                                                            ? 'text-slate-700 dark:text-slate-200 font-medium'
+                                                            : 'text-slate-500 dark:text-slate-400'
+                                                    }`}
+                                                >
                                                     {chat.lastMessage ||
                                                         'Say hello 👋'}
                                                 </p>
                                             </div>
+                                            {unread > 0 && (
+                                                <span className="shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center shadow-sm">
+                                                    {unread > 99
+                                                        ? '99+'
+                                                        : unread}
+                                                </span>
+                                            )}
                                         </motion.button>
                                     );
                                 })
@@ -183,51 +249,113 @@ const ChatSidebar = ({
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 8 }}
                             transition={{ duration: 0.15 }}
-                            className="divide-y divide-slate-100 dark:divide-slate-800/70"
                         >
-                            {incoming.length === 0 ? (
+                            {incoming.length === 0 &&
+                            outgoingPending.length === 0 ? (
                                 <EmptyState
                                     icon={<FaUserClock size={28} />}
                                     text="No pending requests right now."
                                 />
                             ) : (
-                                incoming.map((req) => (
-                                    <div
-                                        key={req.id}
-                                        className="flex items-center gap-3 px-4 py-3"
-                                    >
-                                        <Avatar
-                                            src={req.fromPhoto}
-                                            name={req.fromName}
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="font-semibold text-sm text-slate-800 dark:text-white truncate">
-                                                {req.fromName}
-                                            </p>
-                                            <p className="text-xs text-slate-500">
-                                                wants to chat
-                                            </p>
+                                <>
+                                    {incoming.length > 0 && (
+                                        <div className="divide-y divide-slate-100 dark:divide-slate-800/70">
+                                            {incoming.map((req) => (
+                                                <div
+                                                    key={req.id}
+                                                    className="flex items-center gap-3 px-4 py-3"
+                                                >
+                                                    <Avatar
+                                                        src={req.fromPhoto}
+                                                        name={req.fromName}
+                                                    />
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-semibold text-sm text-slate-800 dark:text-white truncate">
+                                                            {req.fromName}
+                                                        </p>
+                                                        <p className="text-xs text-slate-500">
+                                                            wants to chat
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <motion.button
+                                                            whileTap={{
+                                                                scale: 0.9,
+                                                            }}
+                                                            onClick={() =>
+                                                                onAccept(req)
+                                                            }
+                                                            className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 transition"
+                                                            title="Accept"
+                                                        >
+                                                            <FaCheck
+                                                                size={12}
+                                                            />
+                                                        </motion.button>
+                                                        <motion.button
+                                                            whileTap={{
+                                                                scale: 0.9,
+                                                            }}
+                                                            onClick={() =>
+                                                                onDecline(req)
+                                                            }
+                                                            className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300 flex items-center justify-center hover:bg-rose-200 dark:hover:bg-rose-500/25 transition"
+                                                            title="Decline"
+                                                        >
+                                                            <FaTimes
+                                                                size={12}
+                                                            />
+                                                        </motion.button>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <motion.button
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={() => onAccept(req)}
-                                                className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 transition"
-                                                title="Accept"
-                                            >
-                                                <FaCheck size={12} />
-                                            </motion.button>
-                                            <motion.button
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={() => onDecline(req)}
-                                                className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300 flex items-center justify-center hover:bg-rose-200 dark:hover:bg-rose-500/25 transition"
-                                                title="Decline"
-                                            >
-                                                <FaTimes size={12} />
-                                            </motion.button>
+                                    )}
+
+                                    {outgoingPending.length > 0 && (
+                                        <div className="mt-1">
+                                            <p className="px-4 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                                                Sent by you
+                                            </p>
+                                            <div className="divide-y divide-slate-100 dark:divide-slate-800/70">
+                                                {outgoingPending.map((req) => (
+                                                    <div
+                                                        key={req.id}
+                                                        className="flex items-center gap-3 px-4 py-3"
+                                                    >
+                                                        <Avatar
+                                                            src={req.toPhoto}
+                                                            name={req.toName}
+                                                        />
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-semibold text-sm text-slate-800 dark:text-white truncate">
+                                                                {req.toName}
+                                                            </p>
+                                                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                                                                Pending...
+                                                            </p>
+                                                        </div>
+                                                        <motion.button
+                                                            whileTap={{
+                                                                scale: 0.92,
+                                                            }}
+                                                            onClick={() =>
+                                                                onRetractRequest?.(
+                                                                    req
+                                                                )
+                                                            }
+                                                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-500/15 dark:hover:text-rose-300 transition-colors"
+                                                            title="Cancel request"
+                                                        >
+                                                            <FaBan size={9} />
+                                                            Cancel
+                                                        </motion.button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    )}
+                                </>
                             )}
                         </motion.div>
                     )}
@@ -263,25 +391,48 @@ const ChatSidebar = ({
                                     filteredPeople.map((u) => {
                                         const rel =
                                             relationshipMap[u.uid] || 'none';
+                                        const isNew = newUserIds.has(u.uid);
                                         return (
                                             <div
                                                 key={u.uid}
-                                                className="flex items-center gap-3 px-4 py-3"
+                                                className={`flex items-center gap-3 px-4 py-3 ${isNew ? 'bg-amber-50/60 dark:bg-amber-500/[0.06]' : ''}`}
                                             >
                                                 <Avatar
                                                     src={u.photoURL}
                                                     name={u.displayName}
                                                 />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="font-semibold text-sm text-slate-800 dark:text-white truncate">
-                                                        {u.displayName}
-                                                    </p>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <p className="font-semibold text-sm text-slate-800 dark:text-white truncate">
+                                                            {u.displayName}
+                                                        </p>
+                                                        {isNew && (
+                                                            <span className="flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 shrink-0">
+                                                                <FaWandMagicSparkles
+                                                                    size={7}
+                                                                />
+                                                                New
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <RequestActionButton
                                                     status={rel}
                                                     onClick={() =>
                                                         onSendRequest(u)
                                                     }
+                                                    onCancel={() => {
+                                                        const req =
+                                                            outgoingPending.find(
+                                                                (r) =>
+                                                                    r.toUid ===
+                                                                    u.uid
+                                                            );
+                                                        if (req)
+                                                            onRetractRequest?.(
+                                                                req
+                                                            );
+                                                    }}
                                                 />
                                             </div>
                                         );
@@ -296,7 +447,7 @@ const ChatSidebar = ({
     );
 };
 
-const RequestActionButton = ({ status, onClick }) => {
+const RequestActionButton = ({ status, onClick, onCancel }) => {
     if (status === 'friends')
         return (
             <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
@@ -306,9 +457,15 @@ const RequestActionButton = ({ status, onClick }) => {
 
     if (status === 'pending_sent')
         return (
-            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                Requested
-            </span>
+            <motion.button
+                whileTap={{ scale: 0.92 }}
+                onClick={onCancel}
+                className="group flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-500/15 dark:hover:text-rose-300 transition-colors"
+                title="Cancel request"
+            >
+                <span className="group-hover:hidden">Requested</span>
+                <span className="hidden group-hover:inline">Cancel</span>
+            </motion.button>
         );
 
     if (status === 'pending_received')
