@@ -8,7 +8,7 @@ import {
     sendChatRequest,
     respondToRequest,
     getChatId,
-} from '../services/chatService';
+} from '../services/ChatService';
 import toast from 'react-hot-toast';
 
 export default function useChat() {
