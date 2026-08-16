@@ -11,6 +11,8 @@ import {
     orderBy,
     onSnapshot,
     serverTimestamp,
+    increment,
+    writeBatch,
     limit,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -41,6 +43,7 @@ export const sendChatRequest = async (fromUser, toUser) => {
         toName: toUser.displayName,
         toPhoto: toUser.photoURL || null,
         status: 'pending',
+        seenByRecipient: false,
         createdAt: serverTimestamp(),
     });
 };
@@ -67,6 +70,23 @@ export const listenToOutgoingRequests = (uid, callback) => {
     return onSnapshot(q, (snap) => {
         callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
+};
+
+// Marks incoming requests as seen (clears the "new request" badge)
+// without changing their pending status.
+export const markRequestsSeen = async (requestIds) => {
+    if (!requestIds || !requestIds.length) return;
+    const batch = writeBatch(db);
+    requestIds.forEach((id) => {
+        batch.update(doc(db, 'chatRequests', id), { seenByRecipient: true });
+    });
+    await batch.commit();
+};
+
+// Lets the sender cancel a request they sent by mistake, as long
+// as it's still pending (not yet accepted/declined).
+export const retractRequest = async (requestId) => {
+    await deleteDoc(doc(db, 'chatRequests', requestId));
 };
 
 export const respondToRequest = async (request, accept) => {
@@ -97,6 +117,10 @@ export const respondToRequest = async (request, accept) => {
                 },
                 lastMessage: '',
                 lastMessageAt: serverTimestamp(),
+                unreadCount: {
+                    [request.fromUid]: 0,
+                    [request.toUid]: 0,
+                },
                 createdAt: serverTimestamp(),
             },
             { merge: true }
@@ -137,7 +161,7 @@ export const listenToMessages = (chatId, callback) => {
     });
 };
 
-export const sendMessage = async (chatId, senderId, text) => {
+export const sendMessage = async (chatId, senderId, text, recipientUid) => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
@@ -147,9 +171,28 @@ export const sendMessage = async (chatId, senderId, text) => {
         createdAt: serverTimestamp(),
     });
 
-    await updateDoc(doc(db, 'chats', chatId), {
+    const updates = {
         lastMessage: trimmed,
         lastMessageAt: serverTimestamp(),
+    };
+
+    // Bump the recipient's unread badge for this chat. Firestore's
+    // increment() is atomic, so concurrent messages never clobber
+    // each other's counts.
+    if (recipientUid) {
+        updates[`unreadCount.${recipientUid}`] = increment(1);
+    }
+
+    await updateDoc(doc(db, 'chats', chatId), updates);
+};
+
+// Clears the unread badge for this user in this chat (called when
+// they open/view the conversation, and again as new messages
+// arrive while they're actively looking at it).
+export const markChatRead = async (chatId, uid) => {
+    await updateDoc(doc(db, 'chats', chatId), {
+        [`unreadCount.${uid}`]: 0,
+        [`lastRead.${uid}`]: serverTimestamp(),
     });
 };
 

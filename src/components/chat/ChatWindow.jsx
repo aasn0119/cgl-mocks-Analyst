@@ -6,6 +6,7 @@ import {
     FaEllipsisV,
     FaUserSlash,
     FaExclamationTriangle,
+    FaTrashAlt,
 } from 'react-icons/fa';
 import { Avatar } from './ChatSidebar';
 import useMessages from '../../hooks/useMessages';
@@ -36,19 +37,47 @@ const formatDayLabel = (ts) => {
     });
 };
 
-const ChatWindow = ({ chat, currentUser, onRemoveFriend }) => {
+const ChatWindow = ({ chat, currentUser, onRemoveFriend, onMarkRead }) => {
     const { messages, send } = useMessages(chat?.id);
     const [text, setText] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const bottomRef = useRef(null);
 
-    // Precompute which messages need a "Today / Yesterday / ..."
+    // "Delete for me" — purely local, per-device hide. Doesn't touch
+    // Firestore, so the other person still sees the message; this
+    // just removes it from your own view. Scoped per chat + user.
+    const hiddenKey = `hiddenMsgs_${chat?.id}_${currentUser?.uid}`;
+    const [hiddenIds, setHiddenIds] = useState(() => {
+        try {
+            return new Set(JSON.parse(localStorage.getItem(hiddenKey) || '[]'));
+        } catch {
+            return new Set();
+        }
+    });
+
+    const hideMessage = (id) => {
+        setHiddenIds((prev) => {
+            const next = new Set(prev);
+            next.add(id);
+            try {
+                localStorage.setItem(hiddenKey, JSON.stringify([...next]));
+            } catch {
+                // localStorage unavailable — hide still works for this session
+            }
+            return next;
+        });
+    };
+
+    // Precompute which messages need a "Today / Yesterday / ...":
     // separator above them — built purely functionally (no mutation
     // of a captured variable) so it plays nicely with React's
-    // memoization/compiler rules.
+    // memoization/compiler rules. Hidden (locally-deleted) messages
+    // are filtered out before the day-separator pass so separators
+    // stay consistent with what's actually shown.
     const enrichedMessages = useMemo(() => {
-        const { results } = messages.reduce(
+        const visible = messages.filter((m) => !hiddenIds.has(m.id));
+        const { results } = visible.reduce(
             (state, m) => {
                 const dayLabel = formatDayLabel(m.createdAt);
                 const showDaySeparator =
@@ -64,11 +93,17 @@ const ChatWindow = ({ chat, currentUser, onRemoveFriend }) => {
             { lastLabel: null, results: [] }
         );
         return results;
-    }, [messages]);
+    }, [messages, hiddenIds]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [enrichedMessages.length, chat?.id]);
+
+    // Keep the unread badge cleared while this conversation is
+    // actively open, even as new messages stream in.
+    useEffect(() => {
+        if (chat?.id) onMarkRead?.(chat.id);
+    }, [chat?.id, messages.length, onMarkRead]);
 
     if (!chat) {
         return (
@@ -99,7 +134,7 @@ const ChatWindow = ({ chat, currentUser, onRemoveFriend }) => {
 
     const handleSend = () => {
         if (!text.trim()) return;
-        send(currentUser.uid, text);
+        send(currentUser.uid, text, otherUid);
         setText('');
     };
 
@@ -246,8 +281,17 @@ const ChatWindow = ({ chat, currentUser, onRemoveFriend }) => {
                                         stiffness: 400,
                                         damping: 30,
                                     }}
-                                    className={`flex ${mine ? 'justify-end' : 'justify-start'} mb-1.5`}
+                                    className={`group flex items-center gap-1.5 ${mine ? 'justify-end' : 'justify-start'} mb-1.5`}
                                 >
+                                    {mine && (
+                                        <button
+                                            onClick={() => hideMessage(m.id)}
+                                            title="Delete for me"
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-rose-500 shrink-0"
+                                        >
+                                            <FaTrashAlt size={11} />
+                                        </button>
+                                    )}
                                     <div
                                         className={`max-w-[75%] sm:max-w-[60%] px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
                                             mine
@@ -264,6 +308,15 @@ const ChatWindow = ({ chat, currentUser, onRemoveFriend }) => {
                                             {formatTime(m.createdAt)}
                                         </p>
                                     </div>
+                                    {!mine && (
+                                        <button
+                                            onClick={() => hideMessage(m.id)}
+                                            title="Delete for me"
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-rose-500 shrink-0"
+                                        >
+                                            <FaTrashAlt size={11} />
+                                        </button>
+                                    )}
                                 </motion.div>
                             </div>
                         );

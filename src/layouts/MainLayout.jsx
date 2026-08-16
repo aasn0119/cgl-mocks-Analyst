@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTier } from '../contexts/TierContext';
+import { useChatContext } from '../contexts/ChatContext';
 
 import {
     FaHome,
@@ -20,6 +21,7 @@ import { FaCodeCompare } from 'react-icons/fa6';
 const MainLayout = () => {
     const { user, logout } = useAuth();
     const { tier, toggleTier, pattern } = useTier();
+    const { totalNotifications } = useChatContext() || {};
     const [open, setOpen] = useState(true);
 
     const menu = [
@@ -101,7 +103,17 @@ const MainLayout = () => {
                                 `
                             }
                         >
-                            <span className="text-lg">{item.icon}</span>
+                            <span className="relative text-lg">
+                                {item.icon}
+                                {item.name === 'Chat' &&
+                                    totalNotifications > 0 && (
+                                        <span className="absolute -top-2 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-md animate-pulse">
+                                            {totalNotifications > 9
+                                                ? '9+'
+                                                : totalNotifications}
+                                        </span>
+                                    )}
+                            </span>
 
                             {open && (
                                 <span className="font-medium">{item.name}</span>
