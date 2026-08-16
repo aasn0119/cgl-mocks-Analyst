@@ -13,6 +13,7 @@ import {
     FaBars,
     FaSignOutAlt,
     FaLayerGroup,
+    FaComments,
 } from 'react-icons/fa';
 import { FaCodeCompare } from 'react-icons/fa6';
 
@@ -28,6 +29,7 @@ const MainLayout = () => {
         { name: 'Compare', path: '/reports', icon: <FaCodeCompare /> },
         // { name: 'Students', path: '/students', icon: <FaUsers /> },
         { name: 'Leaderboard', path: '/leaderboard', icon: <FaTrophy /> },
+        { name: 'Chat', path: '/chat', icon: <FaComments /> },
         { name: 'Profile', path: `/profile/${user?.uid}`, icon: <FaUser /> },
     ];
 
