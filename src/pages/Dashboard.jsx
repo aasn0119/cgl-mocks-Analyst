@@ -8,7 +8,7 @@ import PerformanceCharts from '../components/dashboard/PerformanceCharts';
 import RecentMocks from '../components/dashboard/RecentMocks';
 import ReportsSection from '../components/dashboard/ReportsSection';
 import RecordsTable from '../components/dashboard/RecordsTable';
-import ExamCountdownStreak from '../components/dashboard/ExamcountdownStreak';
+import ExamCountdownStreak from '../components/dashboard/Examcountdownstreak';
 import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
