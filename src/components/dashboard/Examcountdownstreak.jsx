@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FaCalendarAlt, FaFire, FaEdit } from 'react-icons/fa';
-import { computeWeeklyStreak, daysUntil } from '../../utils/streaks';
+import { computeWeeklyStreak, daysUntil } from '../../utils/Streaks';
 
 // Purely additive dashboard widget. Exam date is stored per-tier
 // in localStorage (no backend/schema change needed) so switching
