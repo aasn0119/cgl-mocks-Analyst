@@ -7,9 +7,11 @@ import {
     FaUserSlash,
     FaExclamationTriangle,
     FaTrashAlt,
+    FaTimes,
 } from 'react-icons/fa';
 import { Avatar } from './ChatSidebar';
 import useMessages from '../../hooks/useMessages';
+import toast from 'react-hot-toast';
 
 const formatTime = (ts) => {
     if (!ts?.toDate) return '';
@@ -37,7 +39,13 @@ const formatDayLabel = (ts) => {
     });
 };
 
-const ChatWindow = ({ chat, currentUser, onRemoveFriend, onMarkRead }) => {
+const ChatWindow = ({
+    chat,
+    currentUser,
+    onRemoveFriend,
+    onMarkRead,
+    onClose,
+}) => {
     const { messages, send } = useMessages(chat?.id);
     const [text, setText] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
@@ -132,10 +140,19 @@ const ChatWindow = ({ chat, currentUser, onRemoveFriend, onMarkRead }) => {
     const otherUid = chat.participants.find((p) => p !== currentUser?.uid);
     const otherInfo = chat.participantInfo?.[otherUid];
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!text.trim()) return;
-        send(currentUser.uid, text, otherUid);
+        const outgoing = text;
         setText('');
+        try {
+            await send(currentUser.uid, outgoing, otherUid);
+        } catch (err) {
+            console.error('Failed to send message:', err);
+            toast.error(
+                'Message failed to send. Check your connection and try again.'
+            );
+            setText(outgoing);
+        }
     };
 
     return (
@@ -195,6 +212,16 @@ const ChatWindow = ({ chat, currentUser, onRemoveFriend, onMarkRead }) => {
                         )}
                     </AnimatePresence>
                 </div>
+
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10 transition"
+                        title="Close conversation"
+                    >
+                        <FaTimes size={16} />
+                    </button>
+                )}
             </div>
 
             {/* REMOVE FRIEND CONFIRMATION */}

@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaComments } from 'react-icons/fa';
 import { useChatContext } from '../contexts/ChatContext';
@@ -14,10 +15,6 @@ const Chat = () => {
         chats,
         relationshipMap,
         newUsers,
-        selectedChat,
-        selectedChatId,
-        setSelectedChatId,
-        openChat,
         markChatRead,
         sendRequest,
         acceptRequest,
@@ -30,6 +27,30 @@ const Chat = () => {
         markRequestsSeen,
         markUsersSeen,
     } = useChatContext();
+
+    // Deliberately LOCAL to this page (not in ChatContext): this
+    // resets to null every time you navigate away from /chat and
+    // come back, instead of silently reopening whatever was last
+    // selected. The badge/unread data above stays app-wide in
+    // context; only "which chat is currently open" is page-local.
+    const [selectedChatId, setSelectedChatId] = useState(null);
+
+    const selectedChat = useMemo(
+        () => chats.find((c) => c.id === selectedChatId) || null,
+        [chats, selectedChatId]
+    );
+
+    const openChat = (chatId) => {
+        setSelectedChatId(chatId);
+        markChatRead(chatId);
+    };
+
+    const closeChat = () => setSelectedChatId(null);
+
+    const handleRemoveFriend = async (chatId) => {
+        await removeFriend(chatId);
+        if (selectedChatId === chatId) setSelectedChatId(null);
+    };
 
     return (
         <div className="space-y-6">
@@ -109,8 +130,9 @@ const Chat = () => {
                         key={selectedChat?.id || 'empty'}
                         chat={selectedChat}
                         currentUser={currentUser}
-                        onRemoveFriend={removeFriend}
+                        onRemoveFriend={handleRemoveFriend}
                         onMarkRead={markChatRead}
+                        onClose={closeChat}
                     />
                 </div>
 
@@ -119,7 +141,7 @@ const Chat = () => {
                     <div className="md:hidden fixed inset-0 z-50 bg-white dark:bg-slate-900">
                         <div className="flex items-center gap-2 p-3 border-b border-slate-200 dark:border-slate-800">
                             <button
-                                onClick={() => setSelectedChatId(null)}
+                                onClick={closeChat}
                                 className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 px-2"
                             >
                                 ← Back
@@ -130,7 +152,7 @@ const Chat = () => {
                                 key={selectedChat.id}
                                 chat={selectedChat}
                                 currentUser={currentUser}
-                                onRemoveFriend={removeFriend}
+                                onRemoveFriend={handleRemoveFriend}
                                 onMarkRead={markChatRead}
                             />
                         </div>
