@@ -11,8 +11,7 @@ import {
     retractRequest as retractRequestService,
     markRequestsSeen as markRequestsSeenService,
     markChatRead as markChatReadService,
-    getChatId,
-} from '../services/ChatService';
+} from '../services/chatService';
 import toast from 'react-hot-toast';
 
 // Tracks which other users this browser has already "seen" in the
@@ -32,7 +31,6 @@ export const ChatProvider = ({ children }) => {
     const [incoming, setIncoming] = useState([]);
     const [outgoing, setOutgoing] = useState([]);
     const [chats, setChats] = useState([]);
-    const [selectedChatId, setSelectedChatId] = useState(null);
     const [seenVersion, setSeenVersion] = useState(0);
 
     useEffect(() => {
@@ -149,7 +147,6 @@ export const ChatProvider = ({ children }) => {
         try {
             await respondToRequest(request, true);
             toast.success(`You're now connected with ${request.fromName}`);
-            setSelectedChatId(getChatId(request.fromUid, request.toUid));
         } catch (err) {
             console.error(err);
             toast.error('Could not accept request.');
@@ -179,7 +176,6 @@ export const ChatProvider = ({ children }) => {
     const removeFriend = async (chatId) => {
         try {
             await removeFriendService(chatId);
-            if (selectedChatId === chatId) setSelectedChatId(null);
             toast.success('Removed from your chats.');
         } catch (err) {
             console.error(err);
@@ -196,11 +192,6 @@ export const ChatProvider = ({ children }) => {
         } catch (err) {
             console.error(err);
         }
-    };
-
-    const openChat = (chatId) => {
-        setSelectedChatId(chatId);
-        markChatRead(chatId);
     };
 
     const markRequestsSeen = async () => {
@@ -221,11 +212,6 @@ export const ChatProvider = ({ children }) => {
         setSeenVersion((v) => v + 1);
     };
 
-    const selectedChat = useMemo(
-        () => chats.find((c) => c.id === selectedChatId) || null,
-        [chats, selectedChatId]
-    );
-
     const value = {
         currentUser: user,
         otherUsers,
@@ -235,10 +221,6 @@ export const ChatProvider = ({ children }) => {
         outgoingPending,
         chats,
         relationshipMap,
-        selectedChat,
-        selectedChatId,
-        setSelectedChatId,
-        openChat,
         markChatRead,
         sendRequest,
         acceptRequest,
