@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
 import { useAuth } from './AuthContext';
 import { fetchUsers } from '../services/leaderboardService';
 import {
@@ -88,7 +95,9 @@ export const ChatProvider = ({ children }) => {
     const seenUserIds = useMemo(() => {
         try {
             return new Set(
-                JSON.parse(localStorage.getItem(NEW_USERS_STORAGE_KEY) || '[]')
+                JSON.parse(
+                    localStorage.getItem(NEW_USERS_STORAGE_KEY) || '[]'
+                )
             );
         } catch {
             return new Set();
@@ -125,25 +134,28 @@ export const ChatProvider = ({ children }) => {
 
     // ── Actions ─────────────────────────────────────────────
 
-    const sendRequest = async (targetUser) => {
-        if (!user) return;
-        try {
-            await sendChatRequest(
-                {
-                    uid: user.uid,
-                    displayName: user.displayName,
-                    photoURL: user.photoURL,
-                },
-                targetUser
-            );
-            toast.success(`Request sent to ${targetUser.displayName}`);
-        } catch (err) {
-            console.error(err);
-            toast.error('Could not send request. Try again.');
-        }
-    };
+    const sendRequest = useCallback(
+        async (targetUser) => {
+            if (!user) return;
+            try {
+                await sendChatRequest(
+                    {
+                        uid: user.uid,
+                        displayName: user.displayName,
+                        photoURL: user.photoURL,
+                    },
+                    targetUser
+                );
+                toast.success(`Request sent to ${targetUser.displayName}`);
+            } catch (err) {
+                console.error(err);
+                toast.error('Could not send request. Try again.');
+            }
+        },
+        [user]
+    );
 
-    const acceptRequest = async (request) => {
+    const acceptRequest = useCallback(async (request) => {
         try {
             await respondToRequest(request, true);
             toast.success(`You're now connected with ${request.fromName}`);
@@ -151,19 +163,19 @@ export const ChatProvider = ({ children }) => {
             console.error(err);
             toast.error('Could not accept request.');
         }
-    };
+    }, []);
 
-    const declineRequest = async (request) => {
+    const declineRequest = useCallback(async (request) => {
         try {
             await respondToRequest(request, false);
         } catch (err) {
             console.error(err);
             toast.error('Could not decline request.');
         }
-    };
+    }, []);
 
     // Cancel a request you sent by mistake, while it's still pending.
-    const retractRequest = async (request) => {
+    const retractRequest = useCallback(async (request) => {
         try {
             await retractRequestService(request.id);
             toast.success('Request cancelled.');
@@ -171,9 +183,9 @@ export const ChatProvider = ({ children }) => {
             console.error(err);
             toast.error('Could not cancel request.');
         }
-    };
+    }, []);
 
-    const removeFriend = async (chatId) => {
+    const removeFriend = useCallback(async (chatId) => {
         try {
             await removeFriendService(chatId);
             toast.success('Removed from your chats.');
@@ -181,20 +193,26 @@ export const ChatProvider = ({ children }) => {
             console.error(err);
             toast.error('Could not remove this chat. Try again.');
         }
-    };
+    }, []);
 
     // Clears this chat's unread badge for the current user — call
     // on select, and again whenever new messages arrive while open.
-    const markChatRead = async (chatId) => {
-        if (!chatId || !user) return;
-        try {
-            await markChatReadService(chatId, user.uid);
-        } catch (err) {
-            console.error(err);
-        }
-    };
+    // Memoized: ChatWindow's effect depends on this reference, so an
+    // unstable function here would re-fire that effect (and issue a
+    // redundant Firestore write) on every unrelated context update.
+    const markChatRead = useCallback(
+        async (chatId) => {
+            if (!chatId || !user) return;
+            try {
+                await markChatReadService(chatId, user.uid);
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        [user]
+    );
 
-    const markRequestsSeen = async () => {
+    const markRequestsSeen = useCallback(async () => {
         const ids = unseenRequests.map((r) => r.id);
         if (!ids.length) return;
         try {
@@ -202,39 +220,66 @@ export const ChatProvider = ({ children }) => {
         } catch (err) {
             console.error(err);
         }
-    };
+    }, [unseenRequests]);
 
-    const markUsersSeen = () => {
+    const markUsersSeen = useCallback(() => {
         const allIds = [
             ...new Set([...seenUserIds, ...otherUsers.map((u) => u.uid)]),
         ];
-        localStorage.setItem(NEW_USERS_STORAGE_KEY, JSON.stringify(allIds));
+        localStorage.setItem(
+            NEW_USERS_STORAGE_KEY,
+            JSON.stringify(allIds)
+        );
         setSeenVersion((v) => v + 1);
-    };
+    }, [seenUserIds, otherUsers]);
 
-    const value = {
-        currentUser: user,
-        otherUsers,
-        usersLoading,
-        incoming,
-        outgoing,
-        outgoingPending,
-        chats,
-        relationshipMap,
-        markChatRead,
-        sendRequest,
-        acceptRequest,
-        declineRequest,
-        retractRequest,
-        removeFriend,
-        unseenRequestCount: unseenRequests.length,
-        totalUnreadMessages,
-        newUsers,
-        newUsersCount: newUsers.length,
-        totalNotifications,
-        markRequestsSeen,
-        markUsersSeen,
-    };
+    const value = useMemo(
+        () => ({
+            currentUser: user,
+            otherUsers,
+            usersLoading,
+            incoming,
+            outgoing,
+            outgoingPending,
+            chats,
+            relationshipMap,
+            markChatRead,
+            sendRequest,
+            acceptRequest,
+            declineRequest,
+            retractRequest,
+            removeFriend,
+            unseenRequestCount: unseenRequests.length,
+            totalUnreadMessages,
+            newUsers,
+            newUsersCount: newUsers.length,
+            totalNotifications,
+            markRequestsSeen,
+            markUsersSeen,
+        }),
+        [
+            user,
+            otherUsers,
+            usersLoading,
+            incoming,
+            outgoing,
+            outgoingPending,
+            chats,
+            relationshipMap,
+            markChatRead,
+            sendRequest,
+            acceptRequest,
+            declineRequest,
+            retractRequest,
+            removeFriend,
+            unseenRequests.length,
+            totalUnreadMessages,
+            newUsers,
+            totalNotifications,
+            markRequestsSeen,
+            markUsersSeen,
+        ]
+    );
 
     return (
         <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
