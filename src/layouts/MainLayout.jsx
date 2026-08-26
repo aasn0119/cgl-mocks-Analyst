@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTier } from '../contexts/TierContext';
 import { useChatContext } from '../contexts/ChatContext';
+import useAdminAccess from '../hooks/useAdminAccess';
 
 import {
     FaHome,
@@ -15,24 +16,36 @@ import {
     FaSignOutAlt,
     FaLayerGroup,
     FaComments,
+    FaShieldAlt,
 } from 'react-icons/fa';
-import { FaCodeCompare } from 'react-icons/fa6';
+import { FaCodeCompare, FaListCheck } from 'react-icons/fa6';
 
 const MainLayout = () => {
     const { user, logout } = useAuth();
     const { tier, toggleTier, pattern } = useTier();
     const { totalNotifications } = useChatContext() || {};
+    const { isAdmin } = useAdminAccess();
     const [open, setOpen] = useState(true);
 
     const menu = [
         { name: 'Dashboard', path: '/', icon: <FaHome /> },
         { name: 'Mocks', path: '/mocks', icon: <FaFileAlt /> },
+        { name: 'Syllabus', path: '/syllabus', icon: <FaListCheck /> },
         { name: 'Analytics', path: '/analytics', icon: <FaChartBar /> },
         { name: 'Compare', path: '/reports', icon: <FaCodeCompare /> },
         // { name: 'Students', path: '/students', icon: <FaUsers /> },
         { name: 'Leaderboard', path: '/leaderboard', icon: <FaTrophy /> },
         { name: 'Chat', path: '/chat', icon: <FaComments /> },
         { name: 'Profile', path: `/profile/${user?.uid}`, icon: <FaUser /> },
+        ...(isAdmin
+            ? [
+                  {
+                      name: 'Admin Panel',
+                      path: '/admin',
+                      icon: <FaShieldAlt />,
+                  },
+              ]
+            : []),
     ];
 
     const sidebarWidth = open ? 'w-64' : 'w-20';
