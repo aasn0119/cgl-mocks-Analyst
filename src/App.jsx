@@ -6,18 +6,21 @@ import AccessRestricted from './pages/AccessRestricted';
 
 import Dashboard from './pages/Dashboard';
 import Mocks from './pages/Mocks';
+import Syllabus from './pages/Syllabus';
 import Analytics from './pages/Analytics';
 import Reports from './pages/Reports';
 import Students from './pages/Students';
 import Leaderboard from './pages/Leaderboard';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
+import Admin from './pages/Admin';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import NotFound from './pages/NotFound';
 import MainLayout from './layouts/MainLayout';
 
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 
 function App() {
     const { user, authStatus } = useAuth();
@@ -55,6 +58,8 @@ function App() {
 
                     <Route path="/mocks" element={<Mocks />} />
 
+                    <Route path="/syllabus" element={<Syllabus />} />
+
                     <Route path="/analytics" element={<Analytics />} />
 
                     <Route path="/reports" element={<Reports />} />
@@ -69,6 +74,15 @@ function App() {
                     <Route path="/chat" element={<Chat />} />
 
                     <Route path="/profile/:uid" element={<Profile />} />
+
+                    <Route
+                        path="/admin"
+                        element={
+                            <AdminRoute>
+                                <Admin />
+                            </AdminRoute>
+                        }
+                    />
                 </Route>
                 <Route path="*" element={<NotFound />} />
             </Routes>
