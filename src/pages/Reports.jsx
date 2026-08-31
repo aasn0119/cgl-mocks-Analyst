@@ -1,15 +1,3 @@
-// import WorkInProgress from './WorkInProgress';
-
-// const Reports = () => {
-//     return (
-//         <WorkInProgress
-//             title="Reports Dashboard"
-//             subtitle="Advanced analytics dashboard coming soon"
-//         />
-//     );
-// };
-
-// export default Reports;
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTier } from '../contexts/TierContext';
@@ -389,6 +377,193 @@ const ChartCard = ({ title, icon, children, legend }) => (
     </div>
 );
 
+const StatTile = ({ label, value, note, accent, glow }) => (
+    <div
+        style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 18,
+            padding: '16px 18px',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 12px 30px rgba(15, 23, 42, 0.18)',
+        }}
+    >
+        <div
+            style={{
+                position: 'absolute',
+                inset: 0,
+                background: accent,
+                opacity: 0.7,
+                pointerEvents: 'none',
+            }}
+        />
+        <div style={{ position: 'relative' }}>
+            <p
+                style={{
+                    fontSize: 10,
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                    color: '#9ca3af',
+                }}
+            >
+                {label}
+            </p>
+            <div
+                style={{
+                    marginTop: 8,
+                    fontSize: 26,
+                    fontWeight: 800,
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 8,
+                }}
+            >
+                <span>{value}</span>
+                {glow && (
+                    <span
+                        style={{
+                            display: 'inline-flex',
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            background: glow,
+                            boxShadow: `0 0 18px ${glow}`,
+                        }}
+                    />
+                )}
+            </div>
+            <p style={{ fontSize: 12, color: '#bfc6d4', marginTop: 6 }}>
+                {note}
+            </p>
+        </div>
+    </div>
+);
+
+const InsightMetric = ({ label, value, positive, note }) => (
+    <div
+        style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 14,
+            padding: '14px 16px',
+        }}
+    >
+        <p style={{ fontSize: 11, color: '#7c8597', marginBottom: 6 }}>
+            {label}
+        </p>
+        <p
+            style={{
+                fontSize: 20,
+                fontWeight: 800,
+                color: positive ? ME.primary : THEM.primary,
+                marginBottom: 4,
+            }}
+        >
+            {value}
+        </p>
+        <p style={{ fontSize: 11, color: '#7c8597' }}>{note}</p>
+    </div>
+);
+
+const SubjectComparisonRow = ({ subject, me, them }) => {
+    const delta = Number(me) - Number(them);
+    const winner = delta >= 0 ? 'You' : 'Them';
+    const lead = Math.abs(delta).toFixed(1);
+
+    return (
+        <div
+            style={{
+                padding: '12px 14px',
+                borderRadius: 14,
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.06)',
+            }}
+        >
+            <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 8,
+                }}
+            >
+                <span
+                    style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}
+                >
+                    {subject}
+                </span>
+                <span
+                    style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: winner === 'You' ? ME.primary : THEM.primary,
+                        padding: '4px 8px',
+                        borderRadius: 999,
+                        background: winner === 'You' ? ME.light : THEM.light,
+                    }}
+                >
+                    {winner} leads
+                </span>
+            </div>
+
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: 8,
+                    fontSize: 12,
+                    color: '#b3bdcf',
+                }}
+            >
+                <div
+                    style={{
+                        background: 'rgba(127,119,221,0.08)',
+                        borderRadius: 10,
+                        padding: '8px 10px',
+                    }}
+                >
+                    <div style={{ color: ME.primary, fontWeight: 700 }}>
+                        You
+                    </div>
+                    <div
+                        style={{ fontSize: 16, fontWeight: 800, marginTop: 4 }}
+                    >
+                        {Number(me).toFixed(1)}
+                    </div>
+                </div>
+                <div
+                    style={{
+                        background: 'rgba(29,158,117,0.08)',
+                        borderRadius: 10,
+                        padding: '8px 10px',
+                    }}
+                >
+                    <div style={{ color: THEM.primary, fontWeight: 700 }}>
+                        Them
+                    </div>
+                    <div
+                        style={{ fontSize: 16, fontWeight: 800, marginTop: 4 }}
+                    >
+                        {Number(them).toFixed(1)}
+                    </div>
+                </div>
+            </div>
+
+            <div
+                style={{
+                    marginTop: 8,
+                    fontSize: 11,
+                    color: '#7c8597',
+                }}
+            >
+                Lead: {winner} by {lead}
+            </div>
+        </div>
+    );
+};
+
 /* ═══════════════════════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════ */
@@ -528,7 +703,6 @@ export default function Reports() {
 
     const selectedUser = allUsers.find((u) => u.uid === selectedUid);
 
-    /* ── win counter ── */
     const battleResults = useMemo(() => {
         if (!myStats || !themStats) return null;
         const keys = [
@@ -549,7 +723,59 @@ export default function Reports() {
         return { meWins, themWins, total: keys.length };
     }, [myStats, themStats]);
 
-    /* ── loading state ── */
+    const comparisonSummary = useMemo(() => {
+        if (!myStats || !themStats) return [];
+        return [
+            {
+                label: 'Avg score',
+                value: `${myStats.avgScore} vs ${themStats.avgScore}`,
+                positive:
+                    Number(myStats.avgScore) >= Number(themStats.avgScore),
+            },
+            {
+                label: 'Accuracy',
+                value: `${myStats.avgAccuracy}% vs ${themStats.avgAccuracy}%`,
+                positive:
+                    Number(myStats.avgAccuracy) >=
+                    Number(themStats.avgAccuracy),
+            },
+            {
+                label: 'Best score',
+                value: `${myStats.bestScore} vs ${themStats.bestScore}`,
+                positive:
+                    Number(myStats.bestScore) >= Number(themStats.bestScore),
+            },
+            {
+                label: 'Percentile',
+                value: `${myStats.avgPercentile} vs ${themStats.avgPercentile}`,
+                positive:
+                    Number(myStats.avgPercentile) >=
+                    Number(themStats.avgPercentile),
+            },
+        ];
+    }, [myStats, themStats]);
+
+    const strongestSubject = useMemo(() => {
+        if (!subjectCompare.length) return null;
+        const overallWinner = subjectCompare.reduce((best, current) => {
+            const diff =
+                Math.abs(Number(current.me) - Number(current.them)) >
+                Math.abs(Number(best.me) - Number(best.them))
+                    ? current
+                    : best;
+            return diff;
+        }, subjectCompare[0]);
+
+        return overallWinner;
+    }, [subjectCompare]);
+
+    const nearestGap = useMemo(() => {
+        if (!myStats || !themStats) return null;
+        return (Number(myStats.avgScore) - Number(themStats.avgScore)).toFixed(
+            1
+        );
+    }, [myStats, themStats]);
+
     if (!myStats)
         return (
             <div
@@ -581,909 +807,1246 @@ export default function Reports() {
         );
 
     return (
-        <div className="cmp-root">
-            {/* ── HEADER ── */}
-            <div
-                style={{
-                    background:
-                        'linear-gradient(135deg, #26215C 0%, #534AB7 50%, #185FA5 100%)',
-                    borderRadius: 24,
-                    padding: '24px 28px',
-                    marginBottom: 24,
-                    position: 'relative',
-                    overflow: 'hidden',
-                }}
-            >
+        <div
+            className="cmp-root"
+            style={{
+                background:
+                    'radial-gradient(circle at top left, rgba(127,119,221,0.22), transparent 22%), radial-gradient(circle at bottom right, rgba(29,158,117,0.18), transparent 28%), #060810',
+                padding: 24,
+            }}
+        >
+            <div style={{ maxWidth: 1280, margin: '0 auto' }}>
                 <div
                     style={{
-                        position: 'absolute',
-                        top: -40,
-                        right: -40,
-                        width: 180,
-                        height: 180,
-                        borderRadius: '50%',
-                        background: 'rgba(255,255,255,0.05)',
-                        pointerEvents: 'none',
-                    }}
-                />
-                <h1
-                    style={{
-                        fontSize: 22,
-                        fontWeight: 700,
-                        color: '#fff',
-                        marginBottom: 4,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        flexWrap: 'wrap',
+                        background:
+                            'linear-gradient(135deg, rgba(34, 28, 74, 0.95) 0%, rgba(83, 74, 183, 0.88) 42%, rgba(17, 85, 130, 0.9) 100%)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: 28,
+                        padding: '28px 28px 24px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        boxShadow: '0 24px 50px rgba(79,70,229,0.18)',
                     }}
                 >
-                    ⚔️ Compare Performance
-                    <span
+                    <div
                         style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            padding: '3px 10px',
-                            borderRadius: 99,
-                            background: 'rgba(255,255,255,0.18)',
+                            position: 'absolute',
+                            top: '-60px',
+                            right: '-50px',
+                            width: 220,
+                            height: 220,
+                            borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.06)',
+                            pointerEvents: 'none',
                         }}
-                    >
-                        {pattern.fullName}
-                    </span>
-                </h1>
-                <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>
-                    Select a student to compare scores, accuracy, and subject
-                    breakdown side by side.
-                </p>
-            </div>
-
-            {/* ── USER SELECTOR ── */}
-            <div
-                style={{
-                    background: 'var(--card)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 20,
-                    padding: '20px 24px',
-                    marginBottom: 20,
-                    position: 'relative',
-                }}
-            >
-                <p
-                    style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: '#666',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                        marginBottom: 12,
-                    }}
-                >
-                    Choose a student to compare with
-                </p>
-
-                {/* custom dropdown trigger */}
-                <div
-                    onClick={() => setDropdownOpen((o) => !o)}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        background: 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${dropdownOpen ? ME.primary : 'rgba(255,255,255,0.1)'}`,
-                        borderRadius: 12,
-                        padding: '10px 14px',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.2s',
-                        userSelect: 'none',
-                    }}
-                >
-                    {selectedUser ? (
-                        <>
-                            <Avatar user={selectedUser} size={32} />
-                            <span style={{ fontWeight: 600, fontSize: 14 }}>
-                                {selectedUser.displayName || selectedUser.email}
-                            </span>
-                        </>
-                    ) : (
-                        <>
-                            <span style={{ fontSize: 18 }}>👤</span>
-                            <span style={{ color: '#666', fontSize: 14 }}>
-                                Select a student…
-                            </span>
-                        </>
-                    )}
-                    <span
-                        style={{
-                            marginLeft: 'auto',
-                            color: '#555',
-                            fontSize: 12,
-                            transform: dropdownOpen ? 'rotate(180deg)' : 'none',
-                            transition: 'transform 0.2s',
-                        }}
-                    >
-                        ▼
-                    </span>
-                </div>
-
-                {/* dropdown panel */}
-                {dropdownOpen && (
+                    />
                     <div
                         style={{
                             position: 'absolute',
-                            left: 24,
-                            right: 24,
-                            top: 'calc(100% - 12px)',
-                            zIndex: 100,
-                            background: '#13131f',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                            borderRadius: 14,
-                            padding: '8px',
-                            boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
-                        }}
-                    >
-                        <input
-                            autoFocus
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                            placeholder="Search by name…"
-                            style={{
-                                width: '100%',
-                                background: 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                borderRadius: 8,
-                                padding: '8px 12px',
-                                color: '#e2e8f0',
-                                fontSize: 13,
-                                outline: 'none',
-                                marginBottom: 6,
-                            }}
-                        />
-                        <div style={{ maxHeight: 220, overflowY: 'auto' }}>
-                            {filteredUsers.length === 0 && (
-                                <p
-                                    style={{
-                                        padding: '12px',
-                                        color: '#555',
-                                        fontSize: 13,
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    No students found.
-                                </p>
-                            )}
-                            {filteredUsers.map((u) => (
-                                <div
-                                    key={u.uid}
-                                    onClick={() => {
-                                        setSelectedUid(u.uid);
-                                        setDropdownOpen(false);
-                                        setSearchTerm('');
-                                    }}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 10,
-                                        padding: '9px 10px',
-                                        borderRadius: 9,
-                                        cursor: 'pointer',
-                                        background:
-                                            selectedUid === u.uid
-                                                ? ME.light
-                                                : 'transparent',
-                                        transition: 'background 0.15s',
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (selectedUid !== u.uid)
-                                            e.currentTarget.style.background =
-                                                'rgba(255,255,255,0.04)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (selectedUid !== u.uid)
-                                            e.currentTarget.style.background =
-                                                'transparent';
-                                    }}
-                                >
-                                    <Avatar user={u} size={34} />
-                                    <div>
-                                        <p
-                                            style={{
-                                                fontSize: 13,
-                                                fontWeight: 600,
-                                                margin: 0,
-                                            }}
-                                        >
-                                            {u.displayName || 'Unknown'}
-                                        </p>
-                                        <p
-                                            style={{
-                                                fontSize: 11,
-                                                color: '#666',
-                                                margin: 0,
-                                            }}
-                                        >
-                                            {u.email ||
-                                                `Joined ${formatDate(u.joinedAt)}`}
-                                        </p>
-                                    </div>
-                                    {selectedUid === u.uid && (
-                                        <span
-                                            style={{
-                                                marginLeft: 'auto',
-                                                color: ME.primary,
-                                                fontSize: 16,
-                                            }}
-                                        >
-                                            ✓
-                                        </span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* ── EMPTY STATE ── */}
-            {!selectedUid && (
-                <div
-                    style={{
-                        textAlign: 'center',
-                        padding: '60px 20px',
-                        color: '#444',
-                    }}
-                >
-                    <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
-                    <p
-                        style={{
-                            fontSize: 16,
-                            fontWeight: 600,
-                            color: '#666',
-                            marginBottom: 6,
-                        }}
-                    >
-                        No comparison yet
-                    </p>
-                    <p style={{ fontSize: 13 }}>
-                        Select a student from the dropdown above to start
-                        comparing.
-                    </p>
-                </div>
-            )}
-
-            {loadingThem && (
-                <div
-                    style={{
-                        textAlign: 'center',
-                        padding: '40px',
-                        color: '#666',
-                    }}
-                >
-                    <div
-                        style={{
-                            width: 32,
-                            height: 32,
-                            border: '3px solid rgba(127,119,221,0.2)',
-                            borderTop: `3px solid ${ME.primary}`,
+                            bottom: '-50px',
+                            left: '-30px',
+                            width: 180,
+                            height: 180,
                             borderRadius: '50%',
-                            animation: 'spin 0.8s linear infinite',
-                            margin: '0 auto 10px',
+                            background: 'rgba(16,185,129,0.12)',
+                            pointerEvents: 'none',
                         }}
                     />
-                    <p style={{ fontSize: 13 }}>Loading their data…</p>
-                </div>
-            )}
-
-            {selectedUid && !loadingThem && themStats && (
-                <div className="fade-in">
-                    {/* ── PLAYER HEADERS ── */}
                     <div
                         style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr auto 1fr',
-                            gap: 14,
-                            marginBottom: 20,
-                            alignItems: 'center',
+                            position: 'relative',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-end',
+                            gap: 18,
+                            flexWrap: 'wrap',
                         }}
                     >
-                        {/* Me */}
-                        <div
-                            style={{
-                                background: `linear-gradient(135deg, ${ME.primary}22, ${ME.primary}11)`,
-                                border: `1px solid ${ME.primary}44`,
-                                borderRadius: 18,
-                                padding: '18px 20px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 14,
-                            }}
-                        >
-                            <Avatar user={user} size={52} />
-                            <div>
-                                <p
-                                    style={{
-                                        fontSize: 11,
-                                        color: ME.primary,
-                                        fontWeight: 600,
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.06em',
-                                        marginBottom: 2,
-                                    }}
-                                >
-                                    You
-                                </p>
-                                <p style={{ fontSize: 15, fontWeight: 700 }}>
-                                    {user?.displayName || 'You'}
-                                </p>
-                                <p
-                                    style={{
-                                        fontSize: 12,
-                                        color: '#666',
-                                        marginTop: 2,
-                                    }}
-                                >
-                                    {myStats.totalMocks} mocks · Best{' '}
-                                    {myStats.bestScore}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* VS badge */}
-                        <div style={{ textAlign: 'center' }}>
+                        <div>
                             <div
                                 style={{
-                                    width: 48,
-                                    height: 48,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 10,
+                                    marginBottom: 16,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: 42,
+                                        height: 42,
+                                        borderRadius: 14,
+                                        background: 'rgba(255,255,255,0.1)',
+                                        border: '1px solid rgba(255,255,255,0.12)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: 20,
+                                    }}
+                                >
+                                    ⚔️
+                                </div>
+                                <span
+                                    style={{
+                                        border: '1px solid rgba(255,255,255,0.12)',
+                                        background: 'rgba(255,255,255,0.08)',
+                                        color: '#dfe7ff',
+                                        borderRadius: 999,
+                                        padding: '6px 10px',
+                                        fontSize: 10,
+                                        letterSpacing: '0.18em',
+                                        textTransform: 'uppercase',
+                                        fontWeight: 800,
+                                    }}
+                                >
+                                    {pattern.fullName}
+                                </span>
+                            </div>
+                            <h1
+                                style={{
+                                    margin: 0,
+                                    color: '#fff',
+                                    fontSize: 32,
+                                    fontWeight: 800,
+                                    letterSpacing: '-0.04em',
+                                }}
+                            >
+                                Compare Performance
+                            </h1>
+                            <p
+                                style={{
+                                    marginTop: 8,
+                                    color: 'rgba(255,255,255,0.72)',
+                                    fontSize: 14,
+                                    maxWidth: 720,
+                                }}
+                            >
+                                Select a student and compare trends, battle
+                                scores, and subject-level performance side by
+                                side.
+                            </p>
+                        </div>
+
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 10,
+                                padding: '10px 14px',
+                                borderRadius: 999,
+                                border: '1px solid rgba(52,211,153,0.3)',
+                                background: 'rgba(16,185,129,0.12)',
+                                color: '#a7f3d0',
+                                fontWeight: 700,
+                                fontSize: 12,
+                            }}
+                        >
+                            <span
+                                style={{
+                                    display: 'inline-flex',
+                                    width: 9,
+                                    height: 9,
                                     borderRadius: '50%',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    background: '#34d399',
+                                    boxShadow: '0 0 12px rgba(52,211,153,0.9)',
+                                }}
+                            />
+                            Live comparison
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style={{
+                        marginTop: 20,
+                        background: 'rgba(15, 23, 42, 0.92)',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        borderRadius: 24,
+                        padding: '20px 22px',
+                        boxShadow: '0 16px 40px rgba(2, 6, 23, 0.32)',
+                    }}
+                >
+                    <p
+                        style={{
+                            margin: '0 0 12px',
+                            color: '#7c8597',
+                            fontSize: 11,
+                            letterSpacing: '0.18em',
+                            textTransform: 'uppercase',
+                            fontWeight: 700,
+                        }}
+                    >
+                        Choose a student to compare with
+                    </p>
+
+                    <div
+                        onClick={() => setDropdownOpen((o) => !o)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            background: 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${dropdownOpen ? ME.primary : 'rgba(255,255,255,0.08)'}`,
+                            borderRadius: 16,
+                            padding: '12px 14px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            userSelect: 'none',
+                            minHeight: 50,
+                        }}
+                    >
+                        {selectedUser ? (
+                            <>
+                                <Avatar user={selectedUser} size={34} />
+                                <span style={{ fontWeight: 700, fontSize: 14 }}>
+                                    {selectedUser.displayName ||
+                                        selectedUser.email}
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span style={{ fontSize: 18 }}>👤</span>
+                                <span
+                                    style={{ color: '#93a1b6', fontSize: 14 }}
+                                >
+                                    Select a student…
+                                </span>
+                            </>
+                        )}
+                        <span
+                            style={{
+                                marginLeft: 'auto',
+                                color: '#76829a',
+                                fontSize: 12,
+                                transform: dropdownOpen
+                                    ? 'rotate(180deg)'
+                                    : 'none',
+                                transition: 'transform 0.2s ease',
+                            }}
+                        >
+                            ▼
+                        </span>
+                    </div>
+
+                    {dropdownOpen && (
+                        <div
+                            style={{
+                                position: 'relative',
+                                zIndex: 20,
+                                marginTop: 10,
+                                background: '#131827',
+                                border: '1px solid rgba(255,255,255,0.06)',
+                                borderRadius: 18,
+                                padding: 10,
+                                boxShadow: '0 18px 42px rgba(0,0,0,0.42)',
+                            }}
+                        >
+                            <input
+                                autoFocus
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                placeholder="Search by name…"
+                                style={{
+                                    width: '100%',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    borderRadius: 10,
+                                    padding: '10px 12px',
+                                    color: '#e2e8f0',
+                                    fontSize: 13,
+                                    outline: 'none',
+                                    marginBottom: 8,
+                                }}
+                            />
+                            <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+                                {filteredUsers.length === 0 && (
+                                    <p
+                                        style={{
+                                            padding: '12px',
+                                            color: '#69758b',
+                                            fontSize: 13,
+                                            textAlign: 'center',
+                                        }}
+                                    >
+                                        No students found.
+                                    </p>
+                                )}
+                                {filteredUsers.map((u) => (
+                                    <div
+                                        key={u.uid}
+                                        onClick={() => {
+                                            setSelectedUid(u.uid);
+                                            setDropdownOpen(false);
+                                            setSearchTerm('');
+                                        }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                            padding: '10px 8px',
+                                            borderRadius: 12,
+                                            cursor: 'pointer',
+                                            background:
+                                                selectedUid === u.uid
+                                                    ? ME.light
+                                                    : 'transparent',
+                                            transition: 'background 0.15s ease',
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (selectedUid !== u.uid)
+                                                e.currentTarget.style.background =
+                                                    'rgba(255,255,255,0.04)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (selectedUid !== u.uid)
+                                                e.currentTarget.style.background =
+                                                    'transparent';
+                                        }}
+                                    >
+                                        <Avatar user={u} size={34} />
+                                        <div style={{ flex: 1 }}>
+                                            <p
+                                                style={{
+                                                    margin: 0,
+                                                    fontWeight: 700,
+                                                    fontSize: 13,
+                                                    color: '#e2e8f0',
+                                                }}
+                                            >
+                                                {u.displayName || 'Unknown'}
+                                            </p>
+                                            <p
+                                                style={{
+                                                    margin: '2px 0 0',
+                                                    fontSize: 11,
+                                                    color: '#69758b',
+                                                }}
+                                            >
+                                                {u.email ||
+                                                    `Joined ${formatDate(u.joinedAt)}`}
+                                            </p>
+                                        </div>
+                                        {selectedUid === u.uid && (
+                                            <span
+                                                style={{
+                                                    color: ME.primary,
+                                                    fontSize: 18,
+                                                    fontWeight: 800,
+                                                }}
+                                            >
+                                                ✓
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {!selectedUid && (
+                    <div
+                        style={{
+                            marginTop: 22,
+                            padding: '56px 20px',
+                            textAlign: 'center',
+                            background: 'rgba(15, 23, 42, 0.7)',
+                            borderRadius: 24,
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            color: '#7c8597',
+                        }}
+                    >
+                        <div style={{ fontSize: 48, marginBottom: 12 }}>⚔️</div>
+                        <p
+                            style={{
+                                margin: 0,
+                                color: '#dfe7ff',
+                                fontSize: 18,
+                                fontWeight: 700,
+                            }}
+                        >
+                            No comparison yet
+                        </p>
+                        <p style={{ marginTop: 8, fontSize: 13 }}>
+                            Choose a student from the dropdown to compare the
+                            full battle breakdown.
+                        </p>
+                    </div>
+                )}
+
+                {loadingThem && (
+                    <div
+                        style={{
+                            marginTop: 22,
+                            textAlign: 'center',
+                            padding: '40px 20px',
+                            background: 'rgba(15, 23, 42, 0.7)',
+                            borderRadius: 24,
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            color: '#9aa7bf',
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: 32,
+                                height: 32,
+                                border: '3px solid rgba(127,119,221,0.2)',
+                                borderTop: `3px solid ${ME.primary}`,
+                                borderRadius: '50%',
+                                animation: 'spin 0.8s linear infinite',
+                                margin: '0 auto 10px',
+                            }}
+                        />
+                        <p style={{ margin: 0 }}>Loading their data…</p>
+                    </div>
+                )}
+
+                {selectedUid && !loadingThem && themStats && (
+                    <div className="fade-in" style={{ marginTop: 22 }}>
+                        <div
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr auto 1fr',
+                                gap: 12,
+                                alignItems: 'center',
+                                marginBottom: 18,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    background:
+                                        'linear-gradient(135deg, rgba(127,119,221,0.20), rgba(127,119,221,0.08))',
+                                    border: '1px solid rgba(127,119,221,0.30)',
+                                    borderRadius: 18,
+                                    padding: '18px 20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 14,
+                                }}
+                            >
+                                <Avatar user={user} size={52} />
+                                <div>
+                                    <p
+                                        style={{
+                                            margin: 0,
+                                            fontSize: 10,
+                                            letterSpacing: '0.18em',
+                                            textTransform: 'uppercase',
+                                            color: ME.primary,
+                                            fontWeight: 800,
+                                        }}
+                                    >
+                                        You
+                                    </p>
+                                    <p
+                                        style={{
+                                            margin: '6px 0 2px',
+                                            fontSize: 16,
+                                            fontWeight: 800,
+                                            color: '#f8fafc',
+                                        }}
+                                    >
+                                        {user?.displayName || 'You'}
+                                    </p>
+                                    <p
+                                        style={{
+                                            margin: 0,
+                                            fontSize: 12,
+                                            color: '#93a1b6',
+                                        }}
+                                    >
+                                        {myStats.totalMocks} mocks · Best{' '}
+                                        {myStats.bestScore}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div
+                                style={{
+                                    width: 54,
+                                    height: 54,
+                                    borderRadius: '50%',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    background: 'rgba(255,255,255,0.03)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontSize: 14,
-                                    fontWeight: 700,
-                                    color: '#888',
-                                    margin: '0 auto',
+                                    fontWeight: 900,
+                                    color: '#aab7c9',
                                 }}
                             >
                                 VS
                             </div>
-                            {battleResults && (
-                                <p
-                                    style={{
-                                        fontSize: 11,
-                                        color: '#555',
-                                        marginTop: 6,
-                                    }}
-                                >
-                                    <span style={{ color: ME.primary }}>
-                                        {battleResults.meWins}
-                                    </span>
-                                    {' – '}
-                                    <span style={{ color: THEM.primary }}>
-                                        {battleResults.themWins}
-                                    </span>
-                                </p>
-                            )}
-                        </div>
 
-                        {/* Them */}
-                        <div
-                            style={{
-                                background: `linear-gradient(135deg, ${THEM.primary}22, ${THEM.primary}11)`,
-                                border: `1px solid ${THEM.primary}44`,
-                                borderRadius: 18,
-                                padding: '18px 20px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 14,
-                            }}
-                        >
-                            <Avatar user={themUser} size={52} />
-                            <div>
-                                <p
-                                    style={{
-                                        fontSize: 11,
-                                        color: THEM.primary,
-                                        fontWeight: 600,
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.06em',
-                                        marginBottom: 2,
-                                    }}
-                                >
-                                    Opponent
-                                </p>
-                                <p style={{ fontSize: 15, fontWeight: 700 }}>
-                                    {themUser?.displayName || 'Student'}
-                                </p>
-                                <p
-                                    style={{
-                                        fontSize: 12,
-                                        color: '#666',
-                                        marginTop: 2,
-                                    }}
-                                >
-                                    {themStats.totalMocks} mocks · Best{' '}
-                                    {themStats.bestScore}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ── WIN BANNER ── */}
-                    {battleResults &&
-                        battleResults.meWins !== battleResults.themWins && (
                             <div
                                 style={{
                                     background:
-                                        battleResults.meWins >
-                                        battleResults.themWins
-                                            ? ME.light
-                                            : THEM.light,
-                                    border: `1px solid ${battleResults.meWins > battleResults.themWins ? ME.primary : THEM.primary}44`,
-                                    borderRadius: 14,
-                                    padding: '12px 20px',
-                                    marginBottom: 18,
+                                        'linear-gradient(135deg, rgba(29,158,117,0.20), rgba(29,158,117,0.08))',
+                                    border: '1px solid rgba(29,158,117,0.30)',
+                                    borderRadius: 18,
+                                    padding: '18px 20px',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: 12,
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                    color:
-                                        battleResults.meWins >
-                                        battleResults.themWins
-                                            ? ME.primary
-                                            : THEM.primary,
+                                    gap: 14,
                                 }}
                             >
-                                <span style={{ fontSize: 20 }}>🏆</span>
-                                {battleResults.meWins > battleResults.themWins
-                                    ? `You're leading — winning ${battleResults.meWins} out of ${battleResults.total} categories!`
-                                    : `${themUser?.displayName || 'They'} is ahead — leading ${battleResults.themWins} out of ${battleResults.total} categories.`}
+                                <Avatar user={themUser} size={52} />
+                                <div>
+                                    <p
+                                        style={{
+                                            margin: 0,
+                                            fontSize: 10,
+                                            letterSpacing: '0.18em',
+                                            textTransform: 'uppercase',
+                                            color: THEM.primary,
+                                            fontWeight: 800,
+                                        }}
+                                    >
+                                        Opponent
+                                    </p>
+                                    <p
+                                        style={{
+                                            margin: '6px 0 2px',
+                                            fontSize: 16,
+                                            fontWeight: 800,
+                                            color: '#f8fafc',
+                                        }}
+                                    >
+                                        {themUser?.displayName || 'Student'}
+                                    </p>
+                                    <p
+                                        style={{
+                                            margin: 0,
+                                            fontSize: 12,
+                                            color: '#93a1b6',
+                                        }}
+                                    >
+                                        {themStats.totalMocks} mocks · Best{' '}
+                                        {themStats.bestScore}
+                                    </p>
+                                </div>
                             </div>
-                        )}
+                        </div>
 
-                    {/* ── STAT BATTLES ── */}
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: 10,
-                            marginBottom: 20,
-                        }}
-                    >
-                        <StatBattle
-                            label="Avg Score"
-                            icon="📊"
-                            meVal={myStats.avgScore}
-                            themVal={themStats.avgScore}
-                        />
-                        <StatBattle
-                            label="Best Score"
-                            icon="🏆"
-                            meVal={myStats.bestScore}
-                            themVal={themStats.bestScore}
-                        />
-                        <StatBattle
-                            label="Avg Accuracy"
-                            icon="🎯"
-                            meVal={`${myStats.avgAccuracy}%`}
-                            themVal={`${themStats.avgAccuracy}%`}
-                        />
-                        <StatBattle
-                            label="Avg Percentile"
-                            icon="📈"
-                            meVal={`${myStats.avgPercentile}`}
-                            themVal={`${themStats.avgPercentile}`}
-                        />
-                        <StatBattle
-                            label="Total Mocks"
-                            icon="📋"
-                            meVal={myStats.totalMocks}
-                            themVal={themStats.totalMocks}
-                        />
-                        <StatBattle
-                            label="Avg Quant"
-                            icon="🔢"
-                            meVal={myStats.avgQuant}
-                            themVal={themStats.avgQuant}
-                        />
-                        <StatBattle
-                            label="Avg Reasoning"
-                            icon="🧠"
-                            meVal={myStats.avgReasoning}
-                            themVal={themStats.avgReasoning}
-                        />
-                        <StatBattle
-                            label="Avg English"
-                            icon="📖"
-                            meVal={myStats.avgEnglish}
-                            themVal={themStats.avgEnglish}
-                        />
-                        <StatBattle
-                            label="Avg GK"
-                            icon="🌐"
-                            meVal={myStats.avgGk}
-                            themVal={themStats.avgGk}
-                        />
-                    </div>
-
-                    {/* ── SCORE TREND ── */}
-                    <div style={{ marginBottom: 14 }}>
-                        <ChartCard
-                            title="Score trend comparison"
-                            icon="📈"
-                            legend={[
-                                {
-                                    color: ME.primary,
-                                    label: `You (${user?.displayName || 'You'})`,
-                                },
-                                {
-                                    color: THEM.primary,
-                                    label: themUser?.displayName || 'Opponent',
-                                },
-                            ]}
-                        >
-                            <ResponsiveContainer width="100%" height={240}>
-                                <LineChart
-                                    data={mergedTrend}
-                                    margin={{
-                                        top: 4,
-                                        right: 10,
-                                        left: -10,
-                                        bottom: 0,
+                        {battleResults &&
+                            battleResults.meWins !== battleResults.themWins && (
+                                <div
+                                    style={{
+                                        marginBottom: 18,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 12,
+                                        background:
+                                            battleResults.meWins >
+                                            battleResults.themWins
+                                                ? ME.light
+                                                : THEM.light,
+                                        border: `1px solid ${battleResults.meWins > battleResults.themWins ? ME.primary : THEM.primary}44`,
+                                        borderRadius: 16,
+                                        padding: '14px 18px',
+                                        fontWeight: 700,
+                                        color:
+                                            battleResults.meWins >
+                                            battleResults.themWins
+                                                ? ME.primary
+                                                : THEM.primary,
                                     }}
                                 >
-                                    <CartesianGrid
-                                        strokeDasharray="3 3"
-                                        stroke="rgba(255,255,255,0.06)"
-                                    />
-                                    <XAxis
-                                        dataKey="attempt"
-                                        tick={{ fontSize: 11, fill: '#666' }}
-                                        tickLine={false}
-                                    />
-                                    <YAxis
-                                        tick={{ fontSize: 11, fill: '#666' }}
-                                        tickLine={false}
-                                        axisLine={false}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="myScore"
-                                        name="Your score"
-                                        stroke={ME.primary}
-                                        strokeWidth={2.5}
-                                        dot={{ r: 4, fill: ME.primary }}
-                                        activeDot={{ r: 6 }}
-                                        connectNulls
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="themScore"
-                                        name="Their score"
-                                        stroke={THEM.primary}
-                                        strokeWidth={2.5}
-                                        dot={{ r: 4, fill: THEM.primary }}
-                                        activeDot={{ r: 6 }}
-                                        connectNulls
-                                        strokeDasharray="6 3"
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </ChartCard>
-                    </div>
+                                    <span style={{ fontSize: 20 }}>🏆</span>
+                                    {battleResults.meWins >
+                                    battleResults.themWins
+                                        ? `You’re ahead — winning ${battleResults.meWins} of ${battleResults.total} categories.`
+                                        : `${themUser?.displayName || 'They'} leads — winning ${battleResults.themWins} of ${battleResults.total} categories.`}
+                                </div>
+                            )}
 
-                    {/* ── ACCURACY TREND ── */}
-                    <div style={{ marginBottom: 14 }}>
-                        <ChartCard
-                            title="Accuracy trend comparison"
-                            icon="🎯"
-                            legend={[
-                                { color: ME.primary, label: `You` },
-                                {
-                                    color: THEM.primary,
-                                    label: themUser?.displayName || 'Opponent',
-                                },
-                            ]}
-                        >
-                            <ResponsiveContainer width="100%" height={200}>
-                                <LineChart
-                                    data={mergedTrend}
-                                    margin={{
-                                        top: 4,
-                                        right: 10,
-                                        left: -10,
-                                        bottom: 0,
-                                    }}
-                                >
-                                    <CartesianGrid
-                                        strokeDasharray="3 3"
-                                        stroke="rgba(255,255,255,0.06)"
-                                    />
-                                    <XAxis
-                                        dataKey="attempt"
-                                        tick={{ fontSize: 11, fill: '#666' }}
-                                        tickLine={false}
-                                    />
-                                    <YAxis
-                                        tick={{ fontSize: 11, fill: '#666' }}
-                                        tickLine={false}
-                                        axisLine={false}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="myAcc"
-                                        name="Your accuracy"
-                                        stroke={ME.primary}
-                                        strokeWidth={2}
-                                        dot={{ r: 3 }}
-                                        activeDot={{ r: 5 }}
-                                        connectNulls
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="themAcc"
-                                        name="Their accuracy"
-                                        stroke={THEM.primary}
-                                        strokeWidth={2}
-                                        dot={{ r: 3 }}
-                                        activeDot={{ r: 5 }}
-                                        connectNulls
-                                        strokeDasharray="5 3"
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </ChartCard>
-                    </div>
-
-                    {/* ── SUBJECT CHARTS ── */}
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: 14,
-                            marginBottom: 14,
-                        }}
-                    >
-                        {/* Grouped bar */}
-                        <ChartCard
-                            title="Subject averages"
-                            icon="📚"
-                            legend={[
-                                { color: ME.primary, label: 'You' },
-                                {
-                                    color: THEM.primary,
-                                    label: themUser?.displayName || 'Opponent',
-                                },
-                            ]}
-                        >
-                            <ResponsiveContainer width="100%" height={220}>
-                                <BarChart
-                                    data={subjectCompare}
-                                    margin={{
-                                        top: 4,
-                                        right: 8,
-                                        left: -16,
-                                        bottom: 0,
-                                    }}
-                                >
-                                    <CartesianGrid
-                                        strokeDasharray="3 3"
-                                        stroke="rgba(255,255,255,0.06)"
-                                    />
-                                    <XAxis
-                                        dataKey="subject"
-                                        tick={{ fontSize: 10, fill: '#666' }}
-                                        tickLine={false}
-                                    />
-                                    <YAxis
-                                        tick={{ fontSize: 10, fill: '#666' }}
-                                        tickLine={false}
-                                        axisLine={false}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Bar
-                                        dataKey="me"
-                                        name="You"
-                                        fill={ME.primary}
-                                        radius={[4, 4, 0, 0]}
-                                    />
-                                    <Bar
-                                        dataKey="them"
-                                        name="Them"
-                                        fill={THEM.primary}
-                                        radius={[4, 4, 0, 0]}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </ChartCard>
-
-                        {/* Radar */}
-                        <ChartCard
-                            title="Skill radar"
-                            icon="🕸️"
-                            legend={[
-                                { color: ME.primary, label: 'You' },
-                                {
-                                    color: THEM.primary,
-                                    label: themUser?.displayName || 'Opponent',
-                                },
-                            ]}
-                        >
-                            <ResponsiveContainer width="100%" height={220}>
-                                <RadarChart
-                                    data={radarData}
-                                    margin={{
-                                        top: 4,
-                                        right: 24,
-                                        left: 24,
-                                        bottom: 4,
-                                    }}
-                                >
-                                    <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                                    <PolarAngleAxis
-                                        dataKey="subject"
-                                        tick={{ fontSize: 11, fill: '#aaa' }}
-                                    />
-                                    <PolarRadiusAxis
-                                        tick={{ fontSize: 9, fill: '#555' }}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Radar
-                                        dataKey="me"
-                                        name="You"
-                                        stroke={ME.primary}
-                                        fill={ME.primary}
-                                        fillOpacity={0.25}
-                                        strokeWidth={2}
-                                    />
-                                    <Radar
-                                        dataKey="them"
-                                        name="Them"
-                                        stroke={THEM.primary}
-                                        fill={THEM.primary}
-                                        fillOpacity={0.2}
-                                        strokeWidth={2}
-                                        strokeDasharray="4 2"
-                                    />
-                                </RadarChart>
-                            </ResponsiveContainer>
-                        </ChartCard>
-                    </div>
-
-                    {/* ── INSIGHTS PANEL ── */}
-                    <div
-                        style={{
-                            background: 'var(--card)',
-                            border: '1px solid var(--border)',
-                            borderRadius: 20,
-                            padding: '20px 24px',
-                        }}
-                    >
-                        <p
+                        <div
                             style={{
-                                fontWeight: 600,
-                                fontSize: 14,
-                                marginBottom: 14,
+                                display: 'grid',
+                                gridTemplateColumns:
+                                    'repeat(4, minmax(0, 1fr))',
+                                gap: 12,
+                                marginBottom: 18,
                             }}
                         >
-                            💡 Key Insights
-                        </p>
+                            {comparisonSummary.map((item, index) => (
+                                <div
+                                    key={item.label}
+                                    style={{
+                                        background: 'rgba(15, 23, 42, 0.8)',
+                                        border: '1px solid rgba(255,255,255,0.06)',
+                                        borderRadius: 18,
+                                        padding: '12px 14px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 8,
+                                        boxShadow:
+                                            '0 10px 28px rgba(2,6,23,0.2)',
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            gap: 8,
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                fontSize: 11,
+                                                color: '#8a93a7',
+                                            }}
+                                        >
+                                            {item.label}
+                                        </span>
+                                        <span
+                                            style={{
+                                                fontSize: 10,
+                                                fontWeight: 800,
+                                                letterSpacing: '0.08em',
+                                                color: item.positive
+                                                    ? ME.primary
+                                                    : THEM.primary,
+                                            }}
+                                        >
+                                            {item.positive ? 'YOU' : 'THEM'}
+                                        </span>
+                                    </div>
+                                    <div
+                                        style={{
+                                            fontSize: 17,
+                                            fontWeight: 800,
+                                            color: '#fff',
+                                        }}
+                                    >
+                                        {item.value}
+                                    </div>
+                                    <div
+                                        style={{
+                                            width: '100%',
+                                            height: 6,
+                                            borderRadius: 999,
+                                            background:
+                                                'rgba(255,255,255,0.06)',
+                                            overflow: 'hidden',
+                                            display: 'flex',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: `${Math.min(100, Math.max(15, (Number(item.value.split(' vs ')[0]) / Math.max(Number(item.value.split(' vs ')[1]) || 1, 1)) * 100))}%`,
+                                                background: item.positive
+                                                    ? ME.primary
+                                                    : THEM.primary,
+                                                borderRadius: 999,
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
                         <div
                             style={{
                                 display: 'grid',
                                 gridTemplateColumns: '1fr 1fr',
-                                gap: 10,
+                                gap: 12,
+                                marginBottom: 18,
                             }}
                         >
-                            {[
-                                {
-                                    label: 'Score gap',
-                                    val: (
-                                        parseFloat(myStats.avgScore) -
-                                        parseFloat(themStats.avgScore)
-                                    ).toFixed(1),
-                                    pos:
-                                        parseFloat(myStats.avgScore) >=
-                                        parseFloat(themStats.avgScore),
-                                    desc: 'avg score difference',
-                                },
-                                {
-                                    label: 'Accuracy gap',
-                                    val: (
-                                        parseFloat(myStats.avgAccuracy) -
-                                        parseFloat(themStats.avgAccuracy)
-                                    ).toFixed(1),
-                                    pos:
-                                        parseFloat(myStats.avgAccuracy) >=
-                                        parseFloat(themStats.avgAccuracy),
-                                    desc: '% accuracy difference',
-                                },
-                                {
-                                    label: 'Best score gap',
-                                    val: (
-                                        myStats.bestScore - themStats.bestScore
-                                    ).toFixed(0),
-                                    pos:
-                                        myStats.bestScore >=
-                                        themStats.bestScore,
-                                    desc: 'personal best difference',
-                                },
-                                {
-                                    label: 'Percentile gap',
-                                    val: (
-                                        parseFloat(myStats.avgPercentile) -
-                                        parseFloat(themStats.avgPercentile)
-                                    ).toFixed(1),
-                                    pos:
-                                        parseFloat(myStats.avgPercentile) >=
-                                        parseFloat(themStats.avgPercentile),
-                                    desc: 'percentile difference',
-                                },
-                            ].map((ins, i) => (
+                            <StatBattle
+                                label="Avg Score"
+                                icon="📊"
+                                meVal={myStats.avgScore}
+                                themVal={themStats.avgScore}
+                            />
+                            <StatBattle
+                                label="Best Score"
+                                icon="🏆"
+                                meVal={myStats.bestScore}
+                                themVal={themStats.bestScore}
+                            />
+                            <StatBattle
+                                label="Avg Accuracy"
+                                icon="🎯"
+                                meVal={`${myStats.avgAccuracy}%`}
+                                themVal={`${themStats.avgAccuracy}%`}
+                            />
+                            <StatBattle
+                                label="Avg Percentile"
+                                icon="📈"
+                                meVal={`${myStats.avgPercentile}`}
+                                themVal={`${themStats.avgPercentile}`}
+                            />
+                            <StatBattle
+                                label="Total Mocks"
+                                icon="📋"
+                                meVal={myStats.totalMocks}
+                                themVal={themStats.totalMocks}
+                            />
+                            <StatBattle
+                                label="Avg Quant"
+                                icon="🔢"
+                                meVal={myStats.avgQuant}
+                                themVal={themStats.avgQuant}
+                            />
+                            <StatBattle
+                                label="Avg Reasoning"
+                                icon="🧠"
+                                meVal={myStats.avgReasoning}
+                                themVal={themStats.avgReasoning}
+                            />
+                            <StatBattle
+                                label="Avg English"
+                                icon="📖"
+                                meVal={myStats.avgEnglish}
+                                themVal={themStats.avgEnglish}
+                            />
+                            <StatBattle
+                                label="Avg GK"
+                                icon="🌐"
+                                meVal={myStats.avgGk}
+                                themVal={themStats.avgGk}
+                            />
+                        </div>
+
+                        <div
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1.2fr 0.8fr',
+                                gap: 12,
+                                marginBottom: 18,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    background: 'rgba(15, 23, 42, 0.8)',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    borderRadius: 22,
+                                    padding: '18px 18px 12px',
+                                }}
+                            >
                                 <div
-                                    key={i}
                                     style={{
-                                        background: 'rgba(255,255,255,0.03)',
-                                        borderRadius: 12,
-                                        padding: '12px 14px',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        gap: 12,
+                                        marginBottom: 10,
                                     }}
                                 >
-                                    <p
+                                    <div>
+                                        <p
+                                            style={{
+                                                margin: 0,
+                                                fontSize: 10,
+                                                letterSpacing: '0.18em',
+                                                textTransform: 'uppercase',
+                                                color: '#7c8597',
+                                                fontWeight: 700,
+                                            }}
+                                        >
+                                            Subject split
+                                        </p>
+                                        <h3
+                                            style={{
+                                                margin: '6px 0 0',
+                                                fontSize: 20,
+                                                color: '#f8fafc',
+                                            }}
+                                        >
+                                            Strength by subject
+                                        </h3>
+                                    </div>
+                                    <div
                                         style={{
-                                            fontSize: 11,
-                                            color: '#666',
-                                            marginBottom: 4,
+                                            fontSize: 12,
+                                            color: '#cbd5e1',
+                                            background:
+                                                'rgba(255,255,255,0.04)',
+                                            border: '1px solid rgba(255,255,255,0.06)',
+                                            borderRadius: 999,
+                                            padding: '6px 10px',
                                         }}
                                     >
-                                        {ins.label}
-                                    </p>
-                                    <p
-                                        style={{
-                                            fontSize: 20,
-                                            fontWeight: 700,
-                                            color: ins.pos
-                                                ? ME.primary
-                                                : THEM.primary,
-                                            marginBottom: 2,
-                                        }}
-                                    >
-                                        {Number(ins.val) > 0
-                                            ? `+${ins.val}`
-                                            : ins.val}
-                                    </p>
-                                    <p style={{ fontSize: 11, color: '#555' }}>
-                                        {ins.desc}
-                                    </p>
+                                        {strongestSubject
+                                            ? `${strongestSubject.subject} focus`
+                                            : 'No data'}
+                                    </div>
                                 </div>
-                            ))}
+
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    {subjectCompare.map((subject) => (
+                                        <SubjectComparisonRow
+                                            key={subject.subject}
+                                            subject={subject.subject}
+                                            me={subject.me}
+                                            them={subject.them}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div
+                                style={{
+                                    background: 'rgba(15, 23, 42, 0.8)',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    borderRadius: 22,
+                                    padding: '18px',
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        margin: 0,
+                                        fontSize: 10,
+                                        letterSpacing: '0.18em',
+                                        textTransform: 'uppercase',
+                                        color: '#7c8597',
+                                        fontWeight: 700,
+                                    }}
+                                >
+                                    Summary
+                                </p>
+                                <div
+                                    style={{
+                                        marginTop: 12,
+                                        display: 'grid',
+                                        gap: 12,
+                                    }}
+                                >
+                                    <InsightMetric
+                                        label="Avg score delta"
+                                        value={
+                                            nearestGap >= 0
+                                                ? `+${nearestGap}`
+                                                : nearestGap
+                                        }
+                                        positive={Number(nearestGap) >= 0}
+                                        note="overall average lead"
+                                    />
+                                    <InsightMetric
+                                        label="Best performance"
+                                        value={
+                                            myStats.bestScore >
+                                            themStats.bestScore
+                                                ? 'You'
+                                                : 'Them'
+                                        }
+                                        positive={
+                                            myStats.bestScore >=
+                                            themStats.bestScore
+                                        }
+                                        note="highest single mock"
+                                    />
+                                    <InsightMetric
+                                        label="Accuracy edge"
+                                        value={
+                                            Number(myStats.avgAccuracy) >=
+                                            Number(themStats.avgAccuracy)
+                                                ? 'You'
+                                                : 'Them'
+                                        }
+                                        positive={
+                                            Number(myStats.avgAccuracy) >=
+                                            Number(themStats.avgAccuracy)
+                                        }
+                                        note="most reliable scorer"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ marginBottom: 18 }}>
+                            <ChartCard
+                                title="Score trend comparison"
+                                icon="📈"
+                                legend={[
+                                    {
+                                        color: ME.primary,
+                                        label: `You (${user?.displayName || 'You'})`,
+                                    },
+                                    {
+                                        color: THEM.primary,
+                                        label:
+                                            themUser?.displayName || 'Opponent',
+                                    },
+                                ]}
+                            >
+                                <ResponsiveContainer width="100%" height={240}>
+                                    <LineChart
+                                        data={mergedTrend}
+                                        margin={{
+                                            top: 4,
+                                            right: 10,
+                                            left: -10,
+                                            bottom: 0,
+                                        }}
+                                    >
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            stroke="rgba(255,255,255,0.06)"
+                                        />
+                                        <XAxis
+                                            dataKey="attempt"
+                                            tick={{
+                                                fontSize: 11,
+                                                fill: '#666',
+                                            }}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            tick={{
+                                                fontSize: 11,
+                                                fill: '#666',
+                                            }}
+                                            tickLine={false}
+                                            axisLine={false}
+                                        />
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="myScore"
+                                            name="Your score"
+                                            stroke={ME.primary}
+                                            strokeWidth={2.5}
+                                            dot={{ r: 4, fill: ME.primary }}
+                                            activeDot={{ r: 6 }}
+                                            connectNulls
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="themScore"
+                                            name="Their score"
+                                            stroke={THEM.primary}
+                                            strokeWidth={2.5}
+                                            dot={{ r: 4, fill: THEM.primary }}
+                                            activeDot={{ r: 6 }}
+                                            connectNulls
+                                            strokeDasharray="6 3"
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </ChartCard>
+                        </div>
+
+                        <div style={{ marginBottom: 18 }}>
+                            <ChartCard
+                                title="Accuracy trend comparison"
+                                icon="🎯"
+                                legend={[
+                                    { color: ME.primary, label: 'You' },
+                                    {
+                                        color: THEM.primary,
+                                        label:
+                                            themUser?.displayName || 'Opponent',
+                                    },
+                                ]}
+                            >
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <LineChart
+                                        data={mergedTrend}
+                                        margin={{
+                                            top: 4,
+                                            right: 10,
+                                            left: -10,
+                                            bottom: 0,
+                                        }}
+                                    >
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            stroke="rgba(255,255,255,0.06)"
+                                        />
+                                        <XAxis
+                                            dataKey="attempt"
+                                            tick={{
+                                                fontSize: 11,
+                                                fill: '#666',
+                                            }}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            tick={{
+                                                fontSize: 11,
+                                                fill: '#666',
+                                            }}
+                                            tickLine={false}
+                                            axisLine={false}
+                                        />
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="myAcc"
+                                            name="Your accuracy"
+                                            stroke={ME.primary}
+                                            strokeWidth={2}
+                                            dot={{ r: 3 }}
+                                            activeDot={{ r: 5 }}
+                                            connectNulls
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="themAcc"
+                                            name="Their accuracy"
+                                            stroke={THEM.primary}
+                                            strokeWidth={2}
+                                            dot={{ r: 3 }}
+                                            activeDot={{ r: 5 }}
+                                            connectNulls
+                                            strokeDasharray="5 3"
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </ChartCard>
+                        </div>
+
+                        <div
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: 14,
+                                marginBottom: 18,
+                            }}
+                        >
+                            <ChartCard
+                                title="Subject averages"
+                                icon="📚"
+                                legend={[
+                                    { color: ME.primary, label: 'You' },
+                                    {
+                                        color: THEM.primary,
+                                        label:
+                                            themUser?.displayName || 'Opponent',
+                                    },
+                                ]}
+                            >
+                                <ResponsiveContainer width="100%" height={220}>
+                                    <BarChart
+                                        data={subjectCompare}
+                                        margin={{
+                                            top: 4,
+                                            right: 8,
+                                            left: -16,
+                                            bottom: 0,
+                                        }}
+                                    >
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            stroke="rgba(255,255,255,0.06)"
+                                        />
+                                        <XAxis
+                                            dataKey="subject"
+                                            tick={{
+                                                fontSize: 10,
+                                                fill: '#666',
+                                            }}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            tick={{
+                                                fontSize: 10,
+                                                fill: '#666',
+                                            }}
+                                            tickLine={false}
+                                            axisLine={false}
+                                        />
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Bar
+                                            dataKey="me"
+                                            name="You"
+                                            fill={ME.primary}
+                                            radius={[4, 4, 0, 0]}
+                                        />
+                                        <Bar
+                                            dataKey="them"
+                                            name="Them"
+                                            fill={THEM.primary}
+                                            radius={[4, 4, 0, 0]}
+                                        />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </ChartCard>
+
+                            <ChartCard
+                                title="Skill radar"
+                                icon="🕸️"
+                                legend={[
+                                    { color: ME.primary, label: 'You' },
+                                    {
+                                        color: THEM.primary,
+                                        label:
+                                            themUser?.displayName || 'Opponent',
+                                    },
+                                ]}
+                            >
+                                <ResponsiveContainer width="100%" height={220}>
+                                    <RadarChart
+                                        data={radarData}
+                                        margin={{
+                                            top: 4,
+                                            right: 24,
+                                            left: 24,
+                                            bottom: 4,
+                                        }}
+                                    >
+                                        <PolarGrid stroke="rgba(255,255,255,0.08)" />
+                                        <PolarAngleAxis
+                                            dataKey="subject"
+                                            tick={{
+                                                fontSize: 11,
+                                                fill: '#aaa',
+                                            }}
+                                        />
+                                        <PolarRadiusAxis
+                                            tick={{ fontSize: 9, fill: '#555' }}
+                                        />
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Radar
+                                            dataKey="me"
+                                            name="You"
+                                            stroke={ME.primary}
+                                            fill={ME.primary}
+                                            fillOpacity={0.25}
+                                            strokeWidth={2}
+                                        />
+                                        <Radar
+                                            dataKey="them"
+                                            name="Them"
+                                            stroke={THEM.primary}
+                                            fill={THEM.primary}
+                                            fillOpacity={0.2}
+                                            strokeWidth={2}
+                                            strokeDasharray="4 2"
+                                        />
+                                    </RadarChart>
+                                </ResponsiveContainer>
+                            </ChartCard>
+                        </div>
+
+                        <div
+                            style={{
+                                background: 'rgba(15, 23, 42, 0.8)',
+                                border: '1px solid rgba(255,255,255,0.06)',
+                                borderRadius: 22,
+                                padding: '18px 20px',
+                            }}
+                        >
+                            <p
+                                style={{
+                                    margin: 0,
+                                    color: '#e2e8f0',
+                                    fontSize: 16,
+                                    fontWeight: 800,
+                                }}
+                            >
+                                💡 Key insights
+                            </p>
+                            <div
+                                style={{
+                                    marginTop: 14,
+                                    display: 'grid',
+                                    gridTemplateColumns:
+                                        'repeat(4, minmax(0, 1fr))',
+                                    gap: 12,
+                                }}
+                            >
+                                {[
+                                    {
+                                        label: 'Score gap',
+                                        val: (
+                                            parseFloat(myStats.avgScore) -
+                                            parseFloat(themStats.avgScore)
+                                        ).toFixed(1),
+                                        positive:
+                                            parseFloat(myStats.avgScore) >=
+                                            parseFloat(themStats.avgScore),
+                                        desc: 'avg score difference',
+                                    },
+                                    {
+                                        label: 'Accuracy gap',
+                                        val: (
+                                            parseFloat(myStats.avgAccuracy) -
+                                            parseFloat(themStats.avgAccuracy)
+                                        ).toFixed(1),
+                                        positive:
+                                            parseFloat(myStats.avgAccuracy) >=
+                                            parseFloat(themStats.avgAccuracy),
+                                        desc: '% accuracy delta',
+                                    },
+                                    {
+                                        label: 'Best score gap',
+                                        val: (
+                                            myStats.bestScore -
+                                            themStats.bestScore
+                                        ).toFixed(0),
+                                        positive:
+                                            myStats.bestScore >=
+                                            themStats.bestScore,
+                                        desc: 'peak mock lead',
+                                    },
+                                    {
+                                        label: 'Trend lead',
+                                        val:
+                                            Number(myStats.avgPercentile) >=
+                                            Number(themStats.avgPercentile)
+                                                ? 'You'
+                                                : 'Them',
+                                        positive:
+                                            Number(myStats.avgPercentile) >=
+                                            Number(themStats.avgPercentile),
+                                        desc: 'percentile advantage',
+                                    },
+                                ].map((ins) => (
+                                    <InsightMetric
+                                        key={ins.label}
+                                        label={ins.label}
+                                        value={
+                                            ins.label === 'Trend lead'
+                                                ? ins.val
+                                                : Number(ins.val) > 0
+                                                  ? `+${ins.val}`
+                                                  : ins.val
+                                        }
+                                        positive={ins.positive}
+                                        note={ins.desc}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* ── NO MOCKS STATE ── */}
-            {selectedUid && !loadingThem && !themStats && (
-                <div
-                    style={{
-                        textAlign: 'center',
-                        padding: '48px 20px',
-                        color: '#555',
-                    }}
-                >
-                    <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-                    <p style={{ fontSize: 15, fontWeight: 600, color: '#666' }}>
-                        No mock data found
-                    </p>
-                    <p style={{ fontSize: 13, marginTop: 4 }}>
-                        {themUser?.displayName || 'This student'} hasn't
-                        recorded any mocks yet.
-                    </p>
-                </div>
-            )}
+                {selectedUid && !loadingThem && !themStats && (
+                    <div
+                        style={{
+                            marginTop: 22,
+                            textAlign: 'center',
+                            padding: '48px 20px',
+                            background: 'rgba(15, 23, 42, 0.7)',
+                            borderRadius: 24,
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            color: '#7c8597',
+                        }}
+                    >
+                        <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+                        <p
+                            style={{
+                                margin: 0,
+                                color: '#e2e8f0',
+                                fontSize: 18,
+                                fontWeight: 700,
+                            }}
+                        >
+                            No mock data found
+                        </p>
+                        <p style={{ marginTop: 8, fontSize: 13 }}>
+                            {themUser?.displayName || 'This student'} hasn't
+                            recorded any mocks yet.
+                        </p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
