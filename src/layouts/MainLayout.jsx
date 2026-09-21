@@ -17,6 +17,8 @@ import {
     FaLayerGroup,
     FaComments,
     FaShieldAlt,
+    FaKeyboard,
+    FaCommentDots,
 } from 'react-icons/fa';
 import { FaCodeCompare, FaListCheck } from 'react-icons/fa6';
 
@@ -36,6 +38,8 @@ const MainLayout = () => {
         // { name: 'Students', path: '/students', icon: <FaUsers /> },
         { name: 'Leaderboard', path: '/leaderboard', icon: <FaTrophy /> },
         { name: 'Chat', path: '/chat', icon: <FaComments /> },
+        { name: 'Typing Master', path: '/typing-master', icon: <FaKeyboard /> },
+        { name: 'Feedback', path: '/feedback', icon: <FaCommentDots /> },
         { name: 'Profile', path: `/profile/${user?.uid}`, icon: <FaUser /> },
         ...(isAdmin
             ? [

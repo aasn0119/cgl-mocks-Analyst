@@ -11,6 +11,7 @@ import {
     Clock3,
     FileText,
     Filter,
+    MessageSquareText,
     Gauge,
     Layers3,
     Pencil,
@@ -33,6 +34,10 @@ import {
     deleteAdminUser,
     updateAdminUser,
 } from '../services/adminService';
+import {
+    listenToFeedback,
+    updateFeedbackStatus,
+} from '../services/feedbackService';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -68,12 +73,14 @@ const formatRelative = (value) => {
 const getScore = (mock) => Number(mock.totalScore || 0);
 const getTier = (mock) => (mock.tier === 'tier2' ? 'tier2' : 'tier1');
 
-const ADMIN_TABS = ['Overview', 'Users', 'Activity'];
+const ADMIN_TABS = ['Overview', 'Users', 'Activity', 'Feedback'];
 
 const Admin = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [mocks, setMocks] = useState([]);
+    const [feedback, setFeedback] = useState([]);
+    const [feedbackFilter, setFeedbackFilter] = useState('all');
     const [search, setSearch] = useState('');
     const [tierFilter, setTierFilter] = useState('all');
     const [activeTab, setActiveTab] = useState('Overview');
@@ -114,9 +121,22 @@ const Admin = () => {
             () => setError(true)
         );
 
+        const unsubscribeFeedback = listenToFeedback(
+            (snapshot) => {
+                setFeedback(
+                    snapshot.docs.map((item) => ({
+                        id: item.id,
+                        ...item.data(),
+                    }))
+                );
+            },
+            () => setError(true)
+        );
+
         return () => {
             unsubscribeUsers();
             unsubscribeMocks();
+            unsubscribeFeedback();
         };
     }, []);
 
@@ -255,6 +275,30 @@ const Admin = () => {
                 .slice(0, 7),
         [filteredMocks]
     );
+
+    const filteredFeedback = useMemo(
+        () =>
+            [...feedback]
+                .filter(
+                    (item) =>
+                        feedbackFilter === 'all' ||
+                        item.status === feedbackFilter
+                )
+                .sort(
+                    (first, second) =>
+                        (toDate(second.createdAt)?.getTime() || 0) -
+                        (toDate(first.createdAt)?.getTime() || 0)
+                ),
+        [feedback, feedbackFilter]
+    );
+
+    const changeFeedbackStatus = async (item, status) => {
+        try {
+            await updateFeedbackStatus(item.id, status);
+        } catch {
+            setError(true);
+        }
+    };
 
     const openCreateUser = () => {
         setUserActionError('');
@@ -533,6 +577,15 @@ const Admin = () => {
 
             {activeTab === 'Activity' && (
                 <ActivityPanel activity={recentActivity} userMap={userMap} />
+            )}
+
+            {activeTab === 'Feedback' && (
+                <FeedbackPanel
+                    feedback={filteredFeedback}
+                    filter={feedbackFilter}
+                    setFilter={setFeedbackFilter}
+                    onStatusChange={changeFeedbackStatus}
+                />
             )}
 
             {activeTab === 'Overview' && (
@@ -879,6 +932,72 @@ const ActivityPanel = ({ activity, userMap }) => (
                     </div>
                 );
             })}
+        </div>
+    </Panel>
+);
+
+const FeedbackPanel = ({ feedback, filter, setFilter, onStatusChange }) => (
+    <Panel
+        title="Learner feedback"
+        subtitle="Reviews, ideas, and reported issues from the app"
+        icon={MessageSquareText}
+    >
+        <div className="mt-4 flex flex-wrap gap-2">
+            {['all', 'open', 'reviewed', 'resolved'].map((value) => (
+                <button
+                    key={value}
+                    type="button"
+                    onClick={() => setFilter(value)}
+                    className={`rounded-xl px-3 py-2 text-xs font-bold capitalize transition ${filter === value ? 'bg-cyan-500 text-white' : 'bg-slate-100 text-slate-500 hover:text-cyan-600 dark:bg-slate-800 dark:text-slate-400'}`}
+                >
+                    {value === 'all' ? 'All feedback' : value}
+                </button>
+            ))}
+        </div>
+        <div className="mt-5 space-y-3">
+            {!feedback.length && (
+                <EmptyState label="No feedback matches this filter" />
+            )}
+            {feedback.map((item) => (
+                <article
+                    key={item.id}
+                    className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-950/40"
+                >
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="font-bold text-slate-800 dark:text-slate-100">
+                                    {item.userName || 'Student'}
+                                </h3>
+                                <span className="text-xs text-slate-400">
+                                    {item.userEmail}
+                                </span>
+                                <span className="rounded-full bg-indigo-100 px-2 py-1 text-[10px] font-bold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
+                                    {item.category}
+                                </span>
+                            </div>
+                            <p className="mt-1 text-xs text-slate-400">
+                                {formatRelative(item.createdAt)} ·{' '}
+                                {'★'.repeat(Number(item.rating || 0))}
+                            </p>
+                        </div>
+                        <select
+                            value={item.status || 'open'}
+                            onChange={(event) =>
+                                onStatusChange(item, event.target.value)
+                            }
+                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold capitalize text-slate-600 outline-none focus:border-cyan-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                        >
+                            <option value="open">Open</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600 dark:text-slate-300">
+                        {item.message}
+                    </p>
+                </article>
+            ))}
         </div>
     </Panel>
 );
