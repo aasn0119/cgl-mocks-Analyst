@@ -14,6 +14,8 @@ import Leaderboard from './pages/Leaderboard';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import TypingMaster from './pages/TypingMaster';
+import Feedback from './pages/Feedback';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import NotFound from './pages/NotFound';
@@ -72,6 +74,10 @@ function App() {
                     <Route path="/leaderboard" element={<Leaderboard />} />
 
                     <Route path="/chat" element={<Chat />} />
+
+                    <Route path="/typing-master" element={<TypingMaster />} />
+
+                    <Route path="/feedback" element={<Feedback />} />
 
                     <Route path="/profile/:uid" element={<Profile />} />
 
